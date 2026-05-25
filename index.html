@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, touch-action: none">
-    <title>暗夜幸存者 · 完整统计版</title>
+    <title>暗夜幸存者</title>
     <style>
         :root { --bg: #050510; --safe-bottom: env(safe-area-inset-bottom, 0px); }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
@@ -11,10 +11,11 @@
         #game-container { position: relative; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #000; }
         canvas { display: block; width: 100%; height: 100%; object-fit: contain; touch-action: none; }
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; display: flex; align-items: center; justify-content: center; }
-        #menu-buttons { display: flex; flex-direction: column; align-items: center; gap: 16px; pointer-events: auto; }
+        #menu-buttons { display: flex; flex-direction: column; align-items: center; gap: 12px; pointer-events: auto; }
         .menu-btn { background: linear-gradient(135deg, #3a1e5c, #1e1e3a); border: 2px solid #b27aff; color: #f0e6ff; padding: 14px 36px; border-radius: 40px; font-size: 1.3rem; font-weight: bold; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 28px rgba(150,80,255,0.5); text-shadow: 0 0 10px #b27aff; letter-spacing: 2px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; pointer-events: auto; }
         .menu-btn:active { background: linear-gradient(135deg, #5a2e8a, #2e2e5a); box-shadow: 0 0 50px rgba(180,100,255,0.9); border-color: #d4aaff; transform: scale(0.96); }
         .menu-btn.special { background: linear-gradient(135deg, #4a2a1a, #2a1a2a); border-color: #ffaa60; box-shadow: 0 0 30px rgba(255,120,40,0.55); color: #ffe0cc; text-shadow: 0 0 12px #ff8844; }
+        .menu-btn.hard { background: linear-gradient(135deg, #2a1a1a, #1a0a0a); border-color: #ff3333; box-shadow: 0 0 30px rgba(255,60,60,0.6); color: #ffcccc; text-shadow: 0 0 12px #ff4444; }
         #photo-assign-panel { display: none; flex-direction: column; align-items: center; gap: 12px; pointer-events: auto; background: rgba(10,5,20,0.92); border: 2px solid #b27aff; border-radius: 20px; padding: 20px; max-width: 90vw; box-shadow: 0 0 60px rgba(120,40,200,0.6); z-index: 20; }
         #photo-assign-panel h3 { color: #ffe8c0; font-size: 1.2rem; text-align: center; margin: 0; }
         .photo-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-height: 50vh; overflow-y: auto; padding: 5px; }
@@ -36,6 +37,7 @@
         <div id="menu-buttons">
             <button class="menu-btn" id="btn-normal">🌙 经典模式</button>
             <button class="menu-btn special" id="btn-meme">📸 恶搞模式</button>
+            <button class="menu-btn hard" id="btn-hard">💀 超难模式</button>
         </div>
         <div id="photo-assign-panel">
             <h3>📷 分配照片角色</h3>
@@ -65,6 +67,7 @@
     const menuButtons = document.getElementById('menu-buttons');
     const btnNormal = document.getElementById('btn-normal');
     const btnMeme = document.getElementById('btn-meme');
+    const btnHard = document.getElementById('btn-hard');
     const photoInput = document.getElementById('photoInput');
     const photoAssignPanel = document.getElementById('photo-assign-panel');
     const photoGrid = document.getElementById('photo-grid');
@@ -79,16 +82,147 @@
     canvas.width = W;
     canvas.height = H;
 
+    // ==================== 音频管理器 (简化) ====================
+    const audioManager = {
+        bgmAudio: null,
+        hasBGM: false,
+        hitAudios: {},       // { weaponType: Audio }
+        hasHit: {},          // { weaponType: boolean }
+        pickupAudio: null,
+        hasPickup: false,
+        sfxVolume: 0.5,
+        bgmVolume: 0.35,
+
+        init() {
+            // 背景音乐
+            this.bgmAudio = new Audio();
+            this.bgmAudio.loop = true;
+            this.bgmAudio.volume = this.bgmVolume;
+            this.bgmAudio.preload = 'auto';
+            this.bgmAudio.src = 'bgm.mp3';
+            this.bgmAudio.addEventListener('canplaythrough', () => { this.hasBGM = true; console.log('🎵 BGM 加载成功'); }, { once: true });
+            this.bgmAudio.addEventListener('error', () => { this.hasBGM = false; console.log('🎵 未找到 bgm.mp3'); }, { once: true });
+            this.bgmAudio.load();
+
+            // 拾取音效
+            this.pickupAudio = new Audio();
+            this.pickupAudio.volume = this.sfxVolume;
+            this.pickupAudio.preload = 'auto';
+            this.pickupAudio.src = 'pickup.mp3';
+            this.pickupAudio.addEventListener('canplaythrough', () => { this.hasPickup = true; console.log('🔊 pickup.mp3 加载成功'); }, { once: true });
+            this.pickupAudio.addEventListener('error', () => { this.hasPickup = false; }, { once: true });
+            this.pickupAudio.load();
+
+            // 受击音效：根据武器类型加载不同文件
+            const weaponHitMap = {
+                'magicBolt': 'hit_normal.mp3',
+                'spinningShield': 'hit_normal.mp3',
+                'lightningChain': 'hit_lightning.mp3',
+                'fireNova': 'hit_fire.mp3',
+                'iceShard': 'hit_ice.mp3',
+                'ricochetBolt': 'hit_normal.mp3',
+                'scatterShot': 'hit_normal.mp3',
+                'blackHole': 'hit_dark.mp3',
+            };
+            // 尝试加载特定文件，失败则回退到 hit.mp3
+            const defaultHitFile = 'hit.mp3';
+            const loadedDefault = new Audio();
+            loadedDefault.volume = this.sfxVolume;
+            loadedDefault.preload = 'auto';
+            loadedDefault.src = defaultHitFile;
+            loadedDefault.addEventListener('canplaythrough', () => { this.hitAudios['default'] = loadedDefault; this.hasHit['default'] = true; console.log('🔊 hit.mp3 加载成功'); }, { once: true });
+            loadedDefault.addEventListener('error', () => { this.hasHit['default'] = false; }, { once: true });
+            loadedDefault.load();
+            this.hitAudios['default'] = loadedDefault;
+
+            Object.entries(weaponHitMap).forEach(([type, file]) => {
+                const audio = new Audio();
+                audio.volume = this.sfxVolume;
+                audio.preload = 'auto';
+                audio.src = file;
+                audio.addEventListener('canplaythrough', () => { this.hitAudios[type] = audio; this.hasHit[type] = true; console.log(`🔊 ${file} 加载成功`); }, { once: true });
+                audio.addEventListener('error', () => { this.hasHit[type] = false; }, { once: true });
+                audio.load();
+                // 先存null，加载成功后替换
+                this.hitAudios[type] = audio;
+            });
+        },
+
+        playBGM() { if (this.hasBGM && this.bgmAudio) { this.bgmAudio.currentTime = 0; this.bgmAudio.play().catch(() => {}); } },
+        stopBGM() { if (this.bgmAudio) { this.bgmAudio.pause(); this.bgmAudio.currentTime = 0; } },
+        pauseBGM() { if (this.bgmAudio && this.hasBGM) this.bgmAudio.pause(); },
+        resumeBGM() { if (this.bgmAudio && this.hasBGM) this.bgmAudio.play().catch(() => {}); },
+
+        playHit(weaponType) {
+            // 尝试获取特定类型音效，否则用默认
+            let audio = this.hitAudios[weaponType];
+            if (audio && this.hasHit[weaponType]) {
+                const clone = audio.cloneNode();
+                clone.volume = this.sfxVolume;
+                clone.play().catch(() => {});
+                return true;
+            }
+            // 回退默认
+            const defaultAudio = this.hitAudios['default'];
+            if (defaultAudio && this.hasHit['default']) {
+                const clone = defaultAudio.cloneNode();
+                clone.volume = this.sfxVolume;
+                clone.play().catch(() => {});
+                return true;
+            }
+            return false;
+        },
+
+        playPickup() {
+            if (this.hasPickup && this.pickupAudio) {
+                const clone = this.pickupAudio.cloneNode();
+                clone.volume = this.sfxVolume;
+                clone.play().catch(() => {});
+                return true;
+            }
+            return false;
+        }
+    };
+    audioManager.init();
+
+    // ==================== Web Audio 程序化音效 (fallback) ====================
     let audioCtx = null;
     function initAudio() { if (!audioCtx) { try { audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){} } if (audioCtx?.state === 'suspended') audioCtx.resume(); }
-    function playSound(freq,type,dur,vol=0.07,glide=0) { if(!audioCtx) return; try { const t=audioCtx.currentTime; const osc=audioCtx.createOscillator(); const gain=audioCtx.createGain(); osc.type=type; osc.frequency.setValueAtTime(freq,t); if(glide) osc.frequency.linearRampToValueAtTime(freq+glide,t+dur); gain.gain.setValueAtTime(vol,t); gain.gain.exponentialRampToValueAtTime(0.0001,t+dur); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(t); osc.stop(t+dur); } catch(e){} }
-    function sfxPickup(){ playSound(800,'sine',0.08,0.04,400); }
-    function sfxHit(){ playSound(60,'triangle',0.1,0.03); }
-    function sfxExplosion(){ playSound(25,'sawtooth',0.3,0.06,-8); }
-    function sfxLevelUp(){ playSound(500,'sine',0.12,0.03,600); setTimeout(()=>playSound(700,'sine',0.12,0.03,400),70); }
-    function sfxBossAppear(){ playSound(22,'sawtooth',0.55,0.1,18); }
-    function sfxWaveClear(){ playSound(450,'sine',0.14,0.04,300); }
+    function playSynthSound(freq, type, dur, vol = 0.07) {
+        if (!audioCtx) return;
+        try {
+            const t = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, t);
+            gain.gain.setValueAtTime(vol, t);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(t); osc.stop(t + dur);
+        } catch(e) {}
+    }
 
+    // 音效函数
+    function sfxPickup() { if (!audioManager.playPickup()) playSynthSound(800, 'sine', 0.08, 0.04); }
+    function sfxHit(weaponType) {
+        if (!audioManager.playHit(weaponType)) {
+            // 不同武器类型用不同合成音
+            switch (weaponType) {
+                case 'fireNova': playSynthSound(80, 'sawtooth', 0.12, 0.05); break;
+                case 'iceShard': playSynthSound(200, 'triangle', 0.08, 0.04); break;
+                case 'lightningChain': playSynthSound(40, 'square', 0.1, 0.03); break;
+                case 'blackHole': playSynthSound(30, 'sawtooth', 0.15, 0.06); break;
+                default: playSynthSound(60, 'triangle', 0.1, 0.03);
+            }
+        }
+    }
+    function sfxExplosion() { playSynthSound(25, 'sawtooth', 0.3, 0.06); }
+    function sfxLevelUp() { playSynthSound(500, 'sine', 0.12, 0.03); setTimeout(() => playSynthSound(700, 'sine', 0.12, 0.03), 70); }
+    function sfxBossAppear() { playSynthSound(22, 'sawtooth', 0.55, 0.1); }
+    function sfxWaveClear() { playSynthSound(450, 'sine', 0.14, 0.04); }
+
+    // ==================== 游戏状态 ====================
     const STATE = { MENU:'menu', PLAYING:'playing', LEVELUP:'levelUp', WAVE_TRANS:'waveTrans', GAMEOVER:'gameOver', VICTORY:'victory', PAUSED:'paused' };
     let gameState = STATE.MENU;
     let gameTime = 0, deltaTime = 0, lastTime = 0;
@@ -104,7 +238,7 @@
         { name:'混沌王座', bg1:'#120a18', bg2:'#1a0a1a', weights:{skeleton:1.2,bat:1,zombie:1.2}, boss:'chaosLord' },
     ];
 
-    let gameMode = 'normal';
+    let gameMode = 'normal'; // 'normal' | 'meme' | 'hard'
     let memePlayerImg = null;
     let memeEnemyImgs = [];
     let pendingMemeImages = [];
@@ -114,11 +248,10 @@
     let joystickDX = 0, joystickDY = 0;
     const joystickMaxRadius = 40;
 
-    // 统计数据
     let totalDamageDealt = 0;
     let totalDamageReceived = 0;
     let gameStartTime = 0;
-    let gameEndTime = 0; // 记录游戏结束时间，结算用
+    let gameEndTime = 0;
 
     const player = {
         x: W/2, y: H*0.55, radius: 24,
@@ -176,15 +309,27 @@
     function spawnEnemy(type,x,y,ohp=0,ospd=0,odmg=0){
         const base={ skeleton:{hp:38,speed:90,damage:11,exp:7,radius:15,color:'#c8c8c8',glow:'#999'}, bat:{hp:20,speed:185,damage:8,exp:5,radius:12,color:'#dda0a0',glow:'#c55'}, zombie:{hp:70,speed:58,damage:24,exp:12,radius:18,color:'#8a9a6a',glow:'#5a6a3a'} };
         const s=base[type]||base.skeleton;
-        const waveScale=1+(waveNumber-1)*0.13, stageScale=1+stageIndex*0.28;
-        const e={ type,x,y, hp:ohp||Math.floor(s.hp*waveScale*stageScale), maxHp:ohp||Math.floor(s.hp*waveScale*stageScale), speed:ospd||(s.speed*(1+(waveNumber-1)*0.035)), damage:odmg||Math.floor(s.damage*waveScale), exp:Math.floor(s.exp*(1+waveNumber*0.09)), radius:s.radius, color:s.color, glowColor:s.glow, slowTimer:0,slowAmount:0,hitFlashTimer:0,_shieldHitCd:0, assignedImg:null };
+        // 根据模式调整难度系数
+        let waveScale, speedScale, damageScale;
+        if (gameMode === 'hard') {
+            waveScale = 1 + (waveNumber - 1) * 0.28;      // 生命成长更快
+            speedScale = 1 + (waveNumber - 1) * 0.06;
+            damageScale = 1 + (waveNumber - 1) * 0.22;
+        } else {
+            waveScale = 1 + (waveNumber - 1) * 0.13;
+            speedScale = 1 + (waveNumber - 1) * 0.035;
+            damageScale = 1 + (waveNumber - 1) * 0.13;
+        }
+        const stageScale = 1 + stageIndex * 0.28;
+        const e={ type,x,y, hp:ohp||Math.floor(s.hp*waveScale*stageScale), maxHp:ohp||Math.floor(s.hp*waveScale*stageScale), speed:ospd||(s.speed*speedScale), damage:odmg||Math.floor(s.damage*damageScale), exp:Math.floor(s.exp*(1+waveNumber*0.09)), radius:s.radius, color:s.color, glowColor:s.glow, slowTimer:0,slowAmount:0,hitFlashTimer:0,_shieldHitCd:0, assignedImg:null };
         if(gameMode==='meme' && memeEnemyImgs.length>0) e.assignedImg = memeEnemyImgs[Math.floor(Math.random()*memeEnemyImgs.length)];
         enemies.push(e); return e;
     }
     function spawnBoss(type){
         const defs={ necromancer:{hp:700,spd:54,dmg:38,exp:240,radius:34,color:'#2a2a3a',glow:'#7a3aff',name:'亡灵巫师'}, treant:{hp:850,spd:42,dmg:45,exp:300,radius:38,color:'#3a4a2a',glow:'#5a8a30',name:'腐化树精'}, fireGolem:{hp:1000,spd:48,dmg:54,exp:380,radius:36,color:'#4a2a1a',glow:'#ff5020',name:'烈焰魔像'}, iceDragon:{hp:1200,spd:60,dmg:50,exp:460,radius:40,color:'#2a3a4a',glow:'#60c0ff',name:'冰霜巨龙'}, chaosLord:{hp:1700,spd:52,dmg:66,exp:680,radius:44,color:'#3a1a3a',glow:'#ff30ff',name:'混沌之王'} };
         const d=defs[type]||defs.necromancer;
-        const b={ type:'boss',bossType:type,bossName:d.name, x:W/2+(Math.random()-0.5)*300, y:H/2+(Math.random()-0.5)*250, hp:d.hp*(1+stageIndex*0.35), maxHp:d.hp*(1+stageIndex*0.35), speed:d.spd, damage:d.dmg, exp:d.exp*(1+stageIndex*0.25), radius:d.radius, color:d.color, glowColor:d.glow, slowTimer:0,slowAmount:0,hitFlashTimer:0, isBoss:true, phaseTimer:0,specialTimer:3.5, assignedImg:null };
+        const hardMult = gameMode === 'hard' ? 1.5 : 1.0;
+        const b={ type:'boss',bossType:type,bossName:d.name, x:W/2+(Math.random()-0.5)*300, y:H/2+(Math.random()-0.5)*250, hp:Math.floor(d.hp*(1+stageIndex*0.35)*hardMult), maxHp:Math.floor(d.hp*(1+stageIndex*0.35)*hardMult), speed:d.spd*hardMult, damage:Math.floor(d.dmg*hardMult), exp:Math.floor(d.exp*(1+stageIndex*0.25)), radius:d.radius, color:d.color, glowColor:d.glow, slowTimer:0,slowAmount:0,hitFlashTimer:0, isBoss:true, phaseTimer:0,specialTimer:3.5, assignedImg:null };
         if(gameMode==='meme' && memeEnemyImgs.length>0) b.assignedImg = memeEnemyImgs[Math.floor(Math.random()*memeEnemyImgs.length)];
         enemies.push(b); sfxBossAppear(); return b;
     }
@@ -238,6 +383,8 @@
         spawnDamageNumber(enemy.x,enemy.y,finalDmg, finalDmg>dmg?'#ffaa00':'#ffdd88');
         if(weapon&&weapon.type==='iceShard'){ enemy.slowTimer=weapon.slowDuration; enemy.slowAmount=weapon.slowAmount; }
         if(player.lifeSteal>0) player.hp=Math.min(player.maxHp, player.hp+Math.floor(finalDmg*player.lifeSteal));
+        // 播放受击音效（根据武器类型）
+        if(weapon) sfxHit(weapon.type);
         if(enemy.hp<=0) killEnemy(enemy,isExplosion);
     }
     function killEnemy(enemy,isExplosion=false){
@@ -256,7 +403,7 @@
         const orbCnt=enemy.isBoss?14:Math.max(1,Math.floor(expVal/4.5));
         for(let i=0;i<orbCnt;i++) expOrbs.push({x:enemy.x+(Math.random()-0.5)*45,y:enemy.y+(Math.random()-0.5)*45,value:expVal/orbCnt,life:65,radius:6,pulse:Math.random()*Math.PI*2});
         totalKills++;
-        if(enemy.isBoss){ shakeAmount=Math.max(shakeAmount,18); sfxExplosion(); } else sfxHit();
+        if(enemy.isBoss){ shakeAmount=Math.max(shakeAmount,18); sfxExplosion(); }
         enemies.splice(idx,1);
     }
     function damagePlayer(amount){
@@ -266,17 +413,20 @@
         totalDamageReceived += dmg;
         spawnDamageNumber(player.x,player.y-20,dmg,'#ff4444');
         for(let i=0;i<10;i++){ const a=Math.random()*Math.PI*2; spawnParticle(player.x,player.y,Math.cos(a)*120,Math.sin(a)*120,'#ff6666',0.35,3); }
-        if(player.hp<=0){ 
-            player.hp=0; 
-            gameState=STATE.GAMEOVER; 
-            gameEndTime = Date.now(); // 记录结束时间
-            sfxExplosion(); 
-            for(let i=0;i<120;i++){ const a=Math.random()*Math.PI*2; spawnParticle(player.x,player.y,Math.cos(a)*320,Math.sin(a)*320,'#ff8888',0.7,4); } 
+        if(player.hp<=0){
+            player.hp=0;
+            gameState=STATE.GAMEOVER;
+            gameEndTime = Date.now();
+            audioManager.stopBGM();
+            sfxExplosion();
+            for(let i=0;i<120;i++){ const a=Math.random()*Math.PI*2; spawnParticle(player.x,player.y,Math.cos(a)*320,Math.sin(a)*320,'#ff8888',0.7,4); }
         }
     }
 
     function startGame(mode){
-        initAudio(); gameMode=mode; resetPlayer(); enemies=[]; projectiles=[]; particles=[]; damageNumbers=[]; lightningArcs=[]; expOrbs=[]; blackHoles=[];
+        initAudio();
+        audioManager.playBGM();
+        gameMode=mode; resetPlayer(); enemies=[]; projectiles=[]; particles=[]; damageNumbers=[]; lightningArcs=[]; expOrbs=[]; blackHoles=[];
         waveNumber=0; waveTimer=0; totalKills=0; gameTime=0; shakeAmount=0; stageIndex=0; stageTransitionTimer=0;
         totalDamageDealt=0; totalDamageReceived=0; gameStartTime=Date.now(); gameEndTime=0;
         gameState=STATE.WAVE_TRANS; waveTimer=1.8; advanceWave();
@@ -284,13 +434,15 @@
         resetJoystick();
     }
     function resetGame(){
+        audioManager.stopBGM();
         gameState=STATE.MENU; menuButtons.style.display='flex'; photoAssignPanel.style.display='none'; joystickZone.style.display='none';
         enemies=[]; projectiles=[]; particles=[]; damageNumbers=[]; lightningArcs=[]; expOrbs=[]; blackHoles=[];
         joystickActive=false; joystickTouchId=null; resetJoystick();
         memePlayerImg=null; memeEnemyImgs=[]; pendingMemeImages=[]; selectedPlayerPhotoIndex=-1;
     }
     function advanceWave(){
-        waveNumber++; waveTimer=0; waveDuration=26+waveNumber*2;
+        waveNumber++; waveTimer=0;
+        waveDuration = gameMode === 'hard' ? Math.max(15, 28 - waveNumber * 1.2) : 26 + waveNumber * 2;
         if(waveNumber>1 && waveNumber%6===0 && stageIndex<TOTAL_STAGES-1){ stageIndex++; stageTransitionTimer=2.8; enemies=[]; projectiles=[]; lightningArcs=[]; expOrbs=[]; blackHoles=[]; }
         const isBossWave=(waveNumber%5===0) && stageTransitionTimer<=0;
         if(isBossWave){ const bt=STAGES[Math.min(stageIndex,STAGES.length-1)].boss; spawnBoss(bt); }
@@ -301,7 +453,7 @@
     function checkWaveProgress(){
         if(gameState!==STATE.PLAYING)return;
         waveTimer+=deltaTime;
-        const spawnInterval=Math.max(0.25,2.2-waveNumber*0.08);
+        const spawnInterval = gameMode === 'hard' ? Math.max(0.15, 1.5 - waveNumber * 0.12) : Math.max(0.25, 2.2 - waveNumber * 0.08);
         if(waveTimer%spawnInterval<deltaTime && enemies.length<55+waveNumber*9) spawnEnemyAtEdge();
         const allDead=enemies.length===0 && waveTimer>3;
         if(waveTimer>=waveDuration || allDead){
@@ -311,7 +463,8 @@
         if(stageTransitionTimer>0) stageTransitionTimer-=deltaTime;
         if(stageIndex>=TOTAL_STAGES-1 && waveNumber>=25 && enemies.length===0 && gameState===STATE.WAVE_TRANS) {
             gameState=STATE.VICTORY;
-            gameEndTime = Date.now(); // 记录胜利时间
+            gameEndTime = Date.now();
+            audioManager.stopBGM();
         }
     }
 
@@ -342,7 +495,7 @@
         updateParticles(deltaTime); updateDamageNumbers(deltaTime); updateLightningArcs(deltaTime);
         updateWaveTransition(deltaTime); checkWaveProgress();
         if(player.exp>=player.expToNext && gameState===STATE.PLAYING) triggerLevelUp();
-        if(player.hp<=0 && gameState===STATE.PLAYING){ gameState=STATE.GAMEOVER; gameEndTime=Date.now(); sfxExplosion(); for(let i=0;i<120;i++){ const a=Math.random()*Math.PI*2; spawnParticle(player.x,player.y,Math.cos(a)*320,Math.sin(a)*320,'#ff8888',0.7,4); } }
+        if(player.hp<=0 && gameState===STATE.PLAYING){ gameState=STATE.GAMEOVER; gameEndTime=Date.now(); audioManager.stopBGM(); sfxExplosion(); for(let i=0;i<120;i++){ const a=Math.random()*Math.PI*2; spawnParticle(player.x,player.y,Math.cos(a)*320,Math.sin(a)*320,'#ff8888',0.7,4); } }
     }
 
     function fireWeapon(w){
@@ -411,9 +564,11 @@
             cx >= pauseRect.x && cx <= pauseRect.x + pauseRect.w && cy >= pauseRect.y && cy <= pauseRect.y + pauseRect.h) {
             if (gameState === STATE.PAUSED) {
                 gameState = prevPauseState || STATE.PLAYING;
+                audioManager.resumeBGM();
             } else {
                 prevPauseState = gameState;
                 gameState = STATE.PAUSED;
+                audioManager.pauseBGM();
             }
             return;
         }
@@ -427,8 +582,8 @@
         keys[e.key.toLowerCase()] = true;
         initAudio();
         if (e.key === 'Escape' || e.key === 'p') {
-            if (gameState === STATE.PLAYING || gameState === STATE.WAVE_TRANS) { prevPauseState = gameState; gameState = STATE.PAUSED; }
-            else if (gameState === STATE.PAUSED) gameState = prevPauseState || STATE.PLAYING;
+            if (gameState === STATE.PLAYING || gameState === STATE.WAVE_TRANS) { prevPauseState = gameState; gameState = STATE.PAUSED; audioManager.pauseBGM(); }
+            else if (gameState === STATE.PAUSED) { gameState = prevPauseState || STATE.PLAYING; audioManager.resumeBGM(); }
             return;
         }
         if (gameState === STATE.MENU && (e.key===' '||e.key==='Enter')) startGame('normal');
@@ -439,6 +594,7 @@
 
     btnNormal.addEventListener('click',()=>{ initAudio(); startGame('normal'); });
     btnMeme.addEventListener('click',()=>{ initAudio(); photoInput.value=''; photoInput.click(); });
+    btnHard.addEventListener('click',()=>{ initAudio(); startGame('hard'); });
     photoInput.addEventListener('change',e=>{ const files=Array.from(e.target.files); if(files.length===0)return; processMemeImages(files); });
     btnConfirmAssign.addEventListener('click',confirmPhotoAssignment);
     btnCancelAssign.addEventListener('click',cancelPhotoAssignment);
@@ -536,11 +692,13 @@
         if(gameState===STATE.MENU){
             ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(0,0,W,H);
             ctx.fillStyle='#fff'; ctx.font='bold 34px sans-serif'; ctx.textAlign='center'; ctx.fillText('🌙 暗夜幸存者',W/2,H/2-80);
+            ctx.fillStyle='#aaa'; ctx.font='13px sans-serif';
+            ctx.fillText('可选音频文件：bgm.mp3, hit*.mp3, pickup.mp3',W/2,H/2-20);
         }
     }
 
     function renderResultPanel(){
-        const endTime = gameEndTime || Date.now(); // 后备，但必定有值
+        const endTime = gameEndTime || Date.now();
         const elapsed = Math.floor((endTime - gameStartTime) / 1000);
         const minutes = Math.floor(elapsed / 60);
         const seconds = elapsed % 60;
@@ -549,18 +707,15 @@
 
         ctx.fillStyle = 'rgba(0,0,0,0.8)';
         ctx.fillRect(0,0,W,H);
-
         const panelW = 380, panelH = 420;
         const px = (W - panelW) / 2, py = (H - panelH) / 2 - 30;
         ctx.fillStyle = 'rgba(20,15,35,0.95)';
         ctx.strokeStyle = isVictory ? '#ffd700' : '#ff5555';
         ctx.lineWidth = 3;
         ctx.beginPath(); ctx.roundRect(px, py, panelW, panelH, 20); ctx.fill(); ctx.stroke();
-
         ctx.fillStyle = isVictory ? '#ffd700' : '#ff8888';
         ctx.font = 'bold 32px sans-serif'; ctx.textAlign = 'center';
         ctx.fillText(isVictory ? '🏆 胜利！' : '💀 失败', W/2, py + 50);
-
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 16px sans-serif';
         const leftX = px + 40, rightX = px + panelW/2 + 20;
@@ -569,11 +724,10 @@
         const drawRow = (label, value, color='#ffffff') => {
             ctx.fillStyle = '#aaa'; ctx.textAlign = 'left';
             ctx.fillText(label, leftX, y);
-            ctx.fillStyle = color || '#fff'; ctx.textAlign = 'right';
+            ctx.fillStyle = color; ctx.textAlign = 'right';
             ctx.fillText(String(value), rightX + 100, y);
             y += lineH;
         };
-
         drawRow('存活时间', timeStr, '#ffaa00');
         drawRow('消灭敌人', totalKills);
         drawRow('达到波次', waveNumber);
@@ -582,7 +736,6 @@
         drawRow('承受总伤害', totalDamageReceived, '#ff8888');
         drawRow('最高武器数', player.weapons.length);
         drawRow('暴击率', `${Math.floor(player.critChance*100)}%`);
-
         ctx.fillStyle = '#ccc'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center';
         ctx.fillText('点击屏幕重新开始', W/2, py + panelH - 30);
     }
@@ -599,7 +752,7 @@
     document.addEventListener('touchmove',e=>{ if(e.target.closest('#game-container')) e.preventDefault(); },{passive:false});
     resetPlayer(); gameState=STATE.MENU; menuButtons.style.display='flex'; joystickZone.style.display='none';
     requestAnimationFrame(gameLoop);
-    console.log('✅ 计时修复版已启动！');
+    console.log('✅ 已启动！');
 })();
 </script>
 </body>
