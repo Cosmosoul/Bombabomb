@@ -3,31 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, touch-action: none">
-    <title>暗夜幸存者</title>
+    <title>暗夜幸存者 · 极致优化版</title>
     <style>
-        :root { --bg: #050510; --safe-bottom: env(safe-area-inset-bottom, 0px); }
+        :root { --bg: #050510; }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
         html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'PingFang SC','Microsoft YaHei',sans-serif; touch-action: none; position: fixed; top: 0; left: 0; }
         #game-container { position: relative; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #000; }
         canvas { display: block; width: 100%; height: 100%; object-fit: contain; touch-action: none; }
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; display: flex; align-items: center; justify-content: center; }
-        #menu-buttons { display: flex; flex-direction: column; align-items: center; gap: 12px; pointer-events: auto; }
-        .menu-btn { background: linear-gradient(135deg, #3a1e5c, #1e1e3a); border: 2px solid #b27aff; color: #f0e6ff; padding: 14px 36px; border-radius: 40px; font-size: 1.3rem; font-weight: bold; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 28px rgba(150,80,255,0.5); text-shadow: 0 0 10px #b27aff; letter-spacing: 2px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; pointer-events: auto; }
-        .menu-btn:active { background: linear-gradient(135deg, #5a2e8a, #2e2e5a); box-shadow: 0 0 50px rgba(180,100,255,0.9); border-color: #d4aaff; transform: scale(0.96); }
-        .menu-btn.special { background: linear-gradient(135deg, #4a2a1a, #2a1a2a); border-color: #ffaa60; box-shadow: 0 0 30px rgba(255,120,40,0.55); color: #ffe0cc; text-shadow: 0 0 12px #ff8844; }
-        .menu-btn.hard { background: linear-gradient(135deg, #2a1a1a, #1a0a0a); border-color: #ff3333; box-shadow: 0 0 30px rgba(255,60,60,0.6); color: #ffcccc; text-shadow: 0 0 12px #ff4444; }
-        #photo-assign-panel { display: none; flex-direction: column; align-items: center; gap: 12px; pointer-events: auto; background: rgba(10,5,20,0.92); border: 2px solid #b27aff; border-radius: 20px; padding: 20px; max-width: 90vw; box-shadow: 0 0 60px rgba(120,40,200,0.6); z-index: 20; }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 12vh; }
+        #menu-buttons { display: flex; flex-direction: column; align-items: center; gap: 14px; pointer-events: auto; margin-top: 8vh; }
+        .menu-btn { background: linear-gradient(135deg, #3a1e5c, #1e1e3a); border: 2px solid #b27aff; color: #f0e6ff; padding: 14px 40px; border-radius: 40px; font-size: 1.3rem; font-weight: bold; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 32px rgba(150,80,255,0.55); text-shadow: 0 0 12px #b27aff; letter-spacing: 2px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; pointer-events: auto; min-width: 200px; text-align: center; }
+        .menu-btn:active { background: linear-gradient(135deg, #5a2e8a, #2e2e5a); box-shadow: 0 0 55px rgba(180,100,255,0.95); border-color: #d4aaff; transform: scale(0.95); }
+        .menu-btn.special { background: linear-gradient(135deg, #4a2a1a, #2a1a2a); border-color: #ffaa60; box-shadow: 0 0 32px rgba(255,120,40,0.6); color: #ffe0cc; text-shadow: 0 0 12px #ff8844; }
+        .menu-btn.hard { background: linear-gradient(135deg, #2a1010, #1a0505); border-color: #ff4444; box-shadow: 0 0 36px rgba(255,50,50,0.65); color: #ffcccc; text-shadow: 0 0 14px #ff3333; }
+        #photo-assign-panel { display: none; flex-direction: column; align-items: center; gap: 12px; pointer-events: auto; background: rgba(10,5,20,0.93); border: 2px solid #b27aff; border-radius: 22px; padding: 22px; max-width: 92vw; box-shadow: 0 0 70px rgba(120,40,200,0.7); z-index: 20; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
         #photo-assign-panel h3 { color: #ffe8c0; font-size: 1.2rem; text-align: center; margin: 0; }
-        .photo-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-height: 50vh; overflow-y: auto; padding: 5px; }
+        .photo-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-height: 45vh; overflow-y: auto; padding: 5px; }
         .photo-slot { width: 70px; height: 70px; border-radius: 50%; border: 3px solid #555; cursor: pointer; transition: all 0.15s; object-fit: cover; -webkit-tap-highlight-color: transparent; touch-action: manipulation; flex-shrink: 0; }
-        .photo-slot.selected-player { border-color: #ffd700 !important; box-shadow: 0 0 24px rgba(255,215,0,0.8) !important; transform: scale(1.1); }
-        .photo-slot.selected-enemy { border-color: #ff4444 !important; box-shadow: 0 0 16px rgba(255,60,60,0.5) !important; }
-        #btn-confirm-assign, #btn-cancel-assign { background: linear-gradient(135deg, #5a3a1e, #3a1e1e); border: 2px solid #ffaa60; color: #ffe0cc; padding: 12px 32px; border-radius: 30px; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px rgba(255,120,40,0.5); -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+        .photo-slot.selected-player { border-color: #ffd700 !important; box-shadow: 0 0 28px rgba(255,215,0,0.85) !important; transform: scale(1.1); }
+        .photo-slot.selected-enemy { border-color: #ff4444 !important; box-shadow: 0 0 18px rgba(255,60,60,0.55) !important; }
+        #btn-confirm-assign, #btn-cancel-assign { background: linear-gradient(135deg, #5a3a1e, #3a1e1e); border: 2px solid #ffaa60; color: #ffe0cc; padding: 12px 32px; border-radius: 32px; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 0 22px rgba(255,120,40,0.55); -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
         #btn-cancel-assign { background: transparent; border: 1px solid #888; color: #ccc; box-shadow: none; }
         .hidden-input { position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none; }
-        #joystick-zone { position: absolute; bottom: 30px; right: 25px; width: 130px; height: 130px; pointer-events: auto; z-index: 25; display: none; }
-        .joystick-base { width: 100%; height: 100%; border-radius: 50%; background: rgba(20,15,30,0.65); border: 2px solid rgba(255,255,255,0.35); box-shadow: 0 0 30px rgba(150,100,255,0.4); position: relative; backdrop-filter: blur(4px); }
-        .joystick-thumb { width: 50px; height: 50px; background: rgba(255,255,255,0.45); border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); box-shadow: 0 0 20px rgba(200,160,255,0.7); }
     </style>
 </head>
 <body>
@@ -50,11 +47,6 @@
             </div>
         </div>
     </div>
-    <div id="joystick-zone">
-        <div class="joystick-base" id="joystick-base">
-            <div class="joystick-thumb" id="joystick-thumb"></div>
-        </div>
-    </div>
     <input type="file" id="photoInput" class="hidden-input" accept="image/*" multiple>
 </div>
 
@@ -74,46 +66,39 @@
     const btnConfirmAssign = document.getElementById('btn-confirm-assign');
     const btnCancelAssign = document.getElementById('btn-cancel-assign');
     const assignHint = document.getElementById('assign-hint');
-    const joystickZone = document.getElementById('joystick-zone');
-    const joystickBase = document.getElementById('joystick-base');
-    const joystickThumb = document.getElementById('joystick-thumb');
 
     const W = 480, H = 800;
     canvas.width = W;
     canvas.height = H;
 
-    // ==================== 音频管理器 (简化) ====================
+    // ==================== 音频管理器 (带节流) ====================
     const audioManager = {
         bgmAudio: null,
         hasBGM: false,
-        hitAudios: {},       // { weaponType: Audio }
-        hasHit: {},          // { weaponType: boolean }
         pickupAudio: null,
         hasPickup: false,
+        hitAudios: {},
+        hasHit: {},
         sfxVolume: 0.5,
         bgmVolume: 0.35,
+        playHistory: {},  // 节流记录
 
         init() {
-            // 背景音乐
             this.bgmAudio = new Audio();
             this.bgmAudio.loop = true;
             this.bgmAudio.volume = this.bgmVolume;
             this.bgmAudio.preload = 'auto';
             this.bgmAudio.src = 'bgm.mp3';
-            this.bgmAudio.addEventListener('canplaythrough', () => { this.hasBGM = true; console.log('🎵 BGM 加载成功'); }, { once: true });
-            this.bgmAudio.addEventListener('error', () => { this.hasBGM = false; console.log('🎵 未找到 bgm.mp3'); }, { once: true });
+            this.bgmAudio.addEventListener('canplaythrough', () => { this.hasBGM = true; }, { once: true });
             this.bgmAudio.load();
 
-            // 拾取音效
             this.pickupAudio = new Audio();
             this.pickupAudio.volume = this.sfxVolume;
             this.pickupAudio.preload = 'auto';
             this.pickupAudio.src = 'pickup.mp3';
-            this.pickupAudio.addEventListener('canplaythrough', () => { this.hasPickup = true; console.log('🔊 pickup.mp3 加载成功'); }, { once: true });
-            this.pickupAudio.addEventListener('error', () => { this.hasPickup = false; }, { once: true });
+            this.pickupAudio.addEventListener('canplaythrough', () => { this.hasPickup = true; }, { once: true });
             this.pickupAudio.load();
 
-            // 受击音效：根据武器类型加载不同文件
             const weaponHitMap = {
                 'magicBolt': 'hit_normal.mp3',
                 'spinningShield': 'hit_normal.mp3',
@@ -124,28 +109,34 @@
                 'scatterShot': 'hit_normal.mp3',
                 'blackHole': 'hit_dark.mp3',
             };
-            // 尝试加载特定文件，失败则回退到 hit.mp3
-            const defaultHitFile = 'hit.mp3';
-            const loadedDefault = new Audio();
-            loadedDefault.volume = this.sfxVolume;
-            loadedDefault.preload = 'auto';
-            loadedDefault.src = defaultHitFile;
-            loadedDefault.addEventListener('canplaythrough', () => { this.hitAudios['default'] = loadedDefault; this.hasHit['default'] = true; console.log('🔊 hit.mp3 加载成功'); }, { once: true });
-            loadedDefault.addEventListener('error', () => { this.hasHit['default'] = false; }, { once: true });
-            loadedDefault.load();
-            this.hitAudios['default'] = loadedDefault;
+            const defaultAudio = new Audio();
+            defaultAudio.volume = this.sfxVolume;
+            defaultAudio.preload = 'auto';
+            defaultAudio.src = 'hit.mp3';
+            defaultAudio.addEventListener('canplaythrough', () => { this.hitAudios['default'] = defaultAudio; this.hasHit['default'] = true; }, { once: true });
+            defaultAudio.load();
+            this.hitAudios['default'] = defaultAudio;
 
             Object.entries(weaponHitMap).forEach(([type, file]) => {
                 const audio = new Audio();
                 audio.volume = this.sfxVolume;
                 audio.preload = 'auto';
                 audio.src = file;
-                audio.addEventListener('canplaythrough', () => { this.hitAudios[type] = audio; this.hasHit[type] = true; console.log(`🔊 ${file} 加载成功`); }, { once: true });
-                audio.addEventListener('error', () => { this.hasHit[type] = false; }, { once: true });
+                audio.addEventListener('canplaythrough', () => { this.hitAudios[type] = audio; this.hasHit[type] = true; }, { once: true });
                 audio.load();
-                // 先存null，加载成功后替换
                 this.hitAudios[type] = audio;
             });
+        },
+
+        throttlePlay(audioKey) {
+            const now = Date.now();
+            if (!this.playHistory[audioKey]) this.playHistory[audioKey] = [];
+            const history = this.playHistory[audioKey];
+            // 清理超过1秒的记录
+            while (history.length > 0 && now - history[0] > 1000) history.shift();
+            if (history.length >= 5) return false;
+            history.push(now);
+            return true;
         },
 
         playBGM() { if (this.hasBGM && this.bgmAudio) { this.bgmAudio.currentTime = 0; this.bgmAudio.play().catch(() => {}); } },
@@ -154,7 +145,8 @@
         resumeBGM() { if (this.bgmAudio && this.hasBGM) this.bgmAudio.play().catch(() => {}); },
 
         playHit(weaponType) {
-            // 尝试获取特定类型音效，否则用默认
+            const key = 'hit_' + weaponType;
+            if (!this.throttlePlay(key)) return false;
             let audio = this.hitAudios[weaponType];
             if (audio && this.hasHit[weaponType]) {
                 const clone = audio.cloneNode();
@@ -162,7 +154,6 @@
                 clone.play().catch(() => {});
                 return true;
             }
-            // 回退默认
             const defaultAudio = this.hitAudios['default'];
             if (defaultAudio && this.hasHit['default']) {
                 const clone = defaultAudio.cloneNode();
@@ -174,6 +165,8 @@
         },
 
         playPickup() {
+            const key = 'pickup';
+            if (!this.throttlePlay(key)) return false;
             if (this.hasPickup && this.pickupAudio) {
                 const clone = this.pickupAudio.cloneNode();
                 clone.volume = this.sfxVolume;
@@ -185,7 +178,7 @@
     };
     audioManager.init();
 
-    // ==================== Web Audio 程序化音效 (fallback) ====================
+    // ==================== Web Audio fallback ====================
     let audioCtx = null;
     function initAudio() { if (!audioCtx) { try { audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){} } if (audioCtx?.state === 'suspended') audioCtx.resume(); }
     function playSynthSound(freq, type, dur, vol = 0.07) {
@@ -203,11 +196,9 @@
         } catch(e) {}
     }
 
-    // 音效函数
     function sfxPickup() { if (!audioManager.playPickup()) playSynthSound(800, 'sine', 0.08, 0.04); }
     function sfxHit(weaponType) {
         if (!audioManager.playHit(weaponType)) {
-            // 不同武器类型用不同合成音
             switch (weaponType) {
                 case 'fireNova': playSynthSound(80, 'sawtooth', 0.12, 0.05); break;
                 case 'iceShard': playSynthSound(200, 'triangle', 0.08, 0.04); break;
@@ -238,15 +229,19 @@
         { name:'混沌王座', bg1:'#120a18', bg2:'#1a0a1a', weights:{skeleton:1.2,bat:1,zombie:1.2}, boss:'chaosLord' },
     ];
 
-    let gameMode = 'normal'; // 'normal' | 'meme' | 'hard'
+    let gameMode = 'normal';
     let memePlayerImg = null;
     let memeEnemyImgs = [];
     let pendingMemeImages = [];
     let selectedPlayerPhotoIndex = -1;
 
-    let joystickActive = false, joystickTouchId = null;
-    let joystickDX = 0, joystickDY = 0;
-    const joystickMaxRadius = 40;
+    // ==================== 浮动摇杆状态 ====================
+    let joystickActive = false;
+    let joystickTouchId = null;
+    let joystickBaseX = 0, joystickBaseY = 0;   // 摇杆基准点（手指落点）
+    let joystickThumbX = 0, joystickThumbY = 0; // 拇指当前位置
+    let joystickDX = 0, joystickDY = 0;         // 归一化方向
+    const joystickMaxRadius = 55;                // 摇杆最大半径
 
     let totalDamageDealt = 0;
     let totalDamageReceived = 0;
@@ -309,10 +304,9 @@
     function spawnEnemy(type,x,y,ohp=0,ospd=0,odmg=0){
         const base={ skeleton:{hp:38,speed:90,damage:11,exp:7,radius:15,color:'#c8c8c8',glow:'#999'}, bat:{hp:20,speed:185,damage:8,exp:5,radius:12,color:'#dda0a0',glow:'#c55'}, zombie:{hp:70,speed:58,damage:24,exp:12,radius:18,color:'#8a9a6a',glow:'#5a6a3a'} };
         const s=base[type]||base.skeleton;
-        // 根据模式调整难度系数
         let waveScale, speedScale, damageScale;
         if (gameMode === 'hard') {
-            waveScale = 1 + (waveNumber - 1) * 0.28;      // 生命成长更快
+            waveScale = 1 + (waveNumber - 1) * 0.28;
             speedScale = 1 + (waveNumber - 1) * 0.06;
             damageScale = 1 + (waveNumber - 1) * 0.22;
         } else {
@@ -383,7 +377,6 @@
         spawnDamageNumber(enemy.x,enemy.y,finalDmg, finalDmg>dmg?'#ffaa00':'#ffdd88');
         if(weapon&&weapon.type==='iceShard'){ enemy.slowTimer=weapon.slowDuration; enemy.slowAmount=weapon.slowAmount; }
         if(player.lifeSteal>0) player.hp=Math.min(player.maxHp, player.hp+Math.floor(finalDmg*player.lifeSteal));
-        // 播放受击音效（根据武器类型）
         if(weapon) sfxHit(weapon.type);
         if(enemy.hp<=0) killEnemy(enemy,isExplosion);
     }
@@ -414,30 +407,26 @@
         spawnDamageNumber(player.x,player.y-20,dmg,'#ff4444');
         for(let i=0;i<10;i++){ const a=Math.random()*Math.PI*2; spawnParticle(player.x,player.y,Math.cos(a)*120,Math.sin(a)*120,'#ff6666',0.35,3); }
         if(player.hp<=0){
-            player.hp=0;
-            gameState=STATE.GAMEOVER;
-            gameEndTime = Date.now();
-            audioManager.stopBGM();
-            sfxExplosion();
+            player.hp=0; gameState=STATE.GAMEOVER; gameEndTime = Date.now();
+            audioManager.stopBGM(); sfxExplosion();
             for(let i=0;i<120;i++){ const a=Math.random()*Math.PI*2; spawnParticle(player.x,player.y,Math.cos(a)*320,Math.sin(a)*320,'#ff8888',0.7,4); }
         }
     }
 
     function startGame(mode){
-        initAudio();
-        audioManager.playBGM();
+        initAudio(); audioManager.playBGM();
         gameMode=mode; resetPlayer(); enemies=[]; projectiles=[]; particles=[]; damageNumbers=[]; lightningArcs=[]; expOrbs=[]; blackHoles=[];
         waveNumber=0; waveTimer=0; totalKills=0; gameTime=0; shakeAmount=0; stageIndex=0; stageTransitionTimer=0;
         totalDamageDealt=0; totalDamageReceived=0; gameStartTime=Date.now(); gameEndTime=0;
         gameState=STATE.WAVE_TRANS; waveTimer=1.8; advanceWave();
-        menuButtons.style.display='none'; photoAssignPanel.style.display='none'; joystickZone.style.display='block';
-        resetJoystick();
+        menuButtons.style.display='none'; photoAssignPanel.style.display='none';
+        joystickActive=false; joystickTouchId=null;
     }
     function resetGame(){
         audioManager.stopBGM();
-        gameState=STATE.MENU; menuButtons.style.display='flex'; photoAssignPanel.style.display='none'; joystickZone.style.display='none';
+        gameState=STATE.MENU; menuButtons.style.display='flex'; photoAssignPanel.style.display='none';
         enemies=[]; projectiles=[]; particles=[]; damageNumbers=[]; lightningArcs=[]; expOrbs=[]; blackHoles=[];
-        joystickActive=false; joystickTouchId=null; resetJoystick();
+        joystickActive=false; joystickTouchId=null;
         memePlayerImg=null; memeEnemyImgs=[]; pendingMemeImages=[]; selectedPlayerPhotoIndex=-1;
     }
     function advanceWave(){
@@ -462,9 +451,7 @@
         }
         if(stageTransitionTimer>0) stageTransitionTimer-=deltaTime;
         if(stageIndex>=TOTAL_STAGES-1 && waveNumber>=25 && enemies.length===0 && gameState===STATE.WAVE_TRANS) {
-            gameState=STATE.VICTORY;
-            gameEndTime = Date.now();
-            audioManager.stopBGM();
+            gameState=STATE.VICTORY; gameEndTime = Date.now(); audioManager.stopBGM();
         }
     }
 
@@ -518,19 +505,7 @@
     function fireScatterShot(w){ const baseAngle=Math.random()*Math.PI*2; for(let i=0;i<w.count;i++){ const a=baseAngle+(i-(w.count-1)/2)*w.spread; const vx=Math.cos(a)*w.speed, vy=Math.sin(a)*w.speed; spawnProjectile(player.x,player.y,vx,vy,w); } }
     function spawnBlackHole(w){ blackHoles.push({x:player.x,y:player.y,weapon:w,life:w.duration,maxLife:w.duration,pullRadius:w.pullRadius,damageRadius:w.damageRadius,damageTimer:0,damageInterval:0.4}); }
 
-    function updateBlackHoles(dt){
-        for(let i=blackHoles.length-1;i>=0;i--){
-            const bh=blackHoles[i]; bh.life-=dt;
-            if(bh.life<=0){ blackHoles.splice(i,1); continue; }
-            for(const e of enemies){
-                const dx=bh.x-e.x,dy=bh.y-e.y,dist=Math.hypot(dx,dy);
-                if(dist<bh.pullRadius && dist>5){ const strength=1-dist/bh.pullRadius; e.x+=dx/dist*strength*200*dt; e.y+=dy/dist*strength*200*dt; }
-            }
-            bh.damageTimer+=dt;
-            while(bh.damageTimer>=bh.damageInterval){ bh.damageTimer-=bh.damageInterval; for(const e of enemies){ if(Math.hypot(e.x-bh.x,e.y-bh.y)<bh.damageRadius) dealDamage(e,bh.weapon.damage,bh.weapon); } }
-            if(Math.random()<0.6) spawnParticle(bh.x+(Math.random()-0.5)*40,bh.y+(Math.random()-0.5)*40,0,0,bh.weapon.glow,0.3,4);
-        }
-    }
+    function updateBlackHoles(dt){ for(let i=blackHoles.length-1;i>=0;i--){ const bh=blackHoles[i]; bh.life-=dt; if(bh.life<=0){ blackHoles.splice(i,1); continue; } for(const e of enemies){ const dx=bh.x-e.x,dy=bh.y-e.y,dist=Math.hypot(dx,dy); if(dist<bh.pullRadius && dist>5){ const strength=1-dist/bh.pullRadius; e.x+=dx/dist*strength*200*dt; e.y+=dy/dist*strength*200*dt; } } bh.damageTimer+=dt; while(bh.damageTimer>=bh.damageInterval){ bh.damageTimer-=bh.damageInterval; for(const e of enemies){ if(Math.hypot(e.x-bh.x,e.y-bh.y)<bh.damageRadius) dealDamage(e,bh.weapon.damage,bh.weapon); } } if(Math.random()<0.6) spawnParticle(bh.x+(Math.random()-0.5)*40,bh.y+(Math.random()-0.5)*40,0,0,bh.weapon.glow,0.3,4); } }
     function updateProjectiles(dt){ for(let i=projectiles.length-1;i>=0;i--){ const p=projectiles[i]; p.x+=p.vx*dt; p.y+=p.vy*dt; p.life-=dt; if(p.x<-60||p.x>W+60||p.y<-60||p.y>H+60||p.life<=0){ spawnParticle(p.x,p.y,0,0,p.weapon.glow,0.25,4); projectiles.splice(i,1); continue; } let hit=false; for(const e of enemies){ if(p.hitEnemies.has(e))continue; if(Math.hypot(p.x-e.x,p.y-e.y)<e.radius+p.weapon.size+5){ dealDamage(e,p.damage,p.weapon); p.hitEnemies.add(e); if(p.ricochetLeft>0){ p.ricochetLeft--; const next=nearestEnemy(p.x,p.y,300,new Set(p.hitEnemies)); if(next){ const angle=Math.atan2(next.y-p.y,next.x-p.x); p.vx=Math.cos(angle)*p.weapon.speed*0.9; p.vy=Math.sin(angle)*p.weapon.speed*0.9; p.life=Math.min(p.life,1.5); }else{ hit=true; break; } }else if(p.pierceRemaining<=0){ hit=true; break; } else p.pierceRemaining--; } } if(hit){ spawnParticle(p.x,p.y,0,0,p.weapon.glow,0.3,5); projectiles.splice(i,1); } } }
     function updateEnemies(dt){ for(const e of enemies){ if(e.slowTimer>0){ e.slowTimer-=dt; if(e.slowTimer<=0)e.slowAmount=0; } const spMult=e.slowTimer>0?(1-e.slowAmount):1; const dx=player.x-e.x,dy=player.y-e.y,dist=Math.hypot(dx,dy); if(dist>1){ e.x+=dx/dist*e.speed*spMult*dt; e.y+=dy/dist*e.speed*spMult*dt; } if(dist<player.radius+e.radius) damagePlayer(e.damage); if(e.hitFlashTimer>0)e.hitFlashTimer-=dt; if(e.isBoss){ e.phaseTimer+=dt; e.specialTimer-=dt; if(e.specialTimer<=0&&dist<320){ e.specialTimer=4+Math.random()*3; if(e.bossType==='necromancer'&&enemies.length<55){ for(let j=0;j<3;j++) spawnEnemy('skeleton',e.x+(Math.random()-0.5)*110,e.y+(Math.random()-0.5)*110); } } } if(e._shieldHitCd>0)e._shieldHitCd-=dt; } for(const w of player.weapons){ if(w.type!=='spinningShield')continue; for(let i=0;i<w.count;i++){ const ang=w.orbitAngle+(i/w.count)*Math.PI*2; const sx=player.x+Math.cos(ang)*w.orbitRadius, sy=player.y+Math.sin(ang)*w.orbitRadius; if(Math.random()<0.35) spawnParticle(sx,sy,0,0,w.glow,0.2,2.5); for(const e of enemies){ if(Math.hypot(sx-e.x,sy-e.y)<e.radius+w.size+4){ if(!e._shieldHitCd||e._shieldHitCd<=0){ e._shieldHitCd=0.38; dealDamage(e,w.damage,w); } } } } } }
     function updateExpOrbs(dt){ for(let i=expOrbs.length-1;i>=0;i--){ const o=expOrbs[i]; o.life-=dt; o.pulse+=dt*5; if(o.life<=0){ expOrbs.splice(i,1); continue; } const dx=player.x-o.x,dy=player.y-o.y,dist=Math.hypot(dx,dy); if(dist<player.expPickupRange){ const sp=280+(1-dist/player.expPickupRange)*500; const mv=Math.min(sp*dt,dist); if(dist>0.5){ o.x+=dx/dist*mv; o.y+=dy/dist*mv; } if(dist<22){ player.exp+=o.value; expOrbs.splice(i,1); sfxPickup(); spawnParticle(o.x,o.y,0,0,'#ffe8a0',0.35,4); } } } }
@@ -538,45 +513,185 @@
     function updateDamageNumbers(dt){ for(let i=damageNumbers.length-1;i>=0;i--){ const d=damageNumbers[i]; d.y+=d.vy*dt; d.life-=dt; if(d.life<=0)damageNumbers.splice(i,1); } }
     function updateLightningArcs(dt){ for(let i=lightningArcs.length-1;i>=0;i--){ if((lightningArcs[i].life-=dt)<=0)lightningArcs.splice(i,1); } }
 
-    function getJoystickCenter(){ const r=joystickBase.getBoundingClientRect(); return{x:r.left+r.width/2,y:r.top+r.height/2}; }
-    function resetJoystick(){ joystickDX=0; joystickDY=0; joystickThumb.style.transform='translate(-50%,-50%)'; }
-    function handleJoystickMove(cx,cy){
-        const c=getJoystickCenter(); const dx=cx-c.x,dy=cy-c.y; const dist=Math.sqrt(dx*dx+dy*dy), clamped=Math.min(dist,joystickMaxRadius);
-        if(clamped>2){ joystickDX=(dx/dist)*(clamped/joystickMaxRadius); joystickDY=(dy/dist)*(clamped/joystickMaxRadius); joystickThumb.style.transform=`translate(calc(-50% + ${dx/dist*clamped}px), calc(-50% + ${dy/dist*clamped}px))`; }
-        else{ joystickDX=0; joystickDY=0; joystickThumb.style.transform='translate(-50%,-50%)'; }
+    // ==================== 浮动摇杆处理 ====================
+    function canvasCoords(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: (clientX - rect.left) / (rect.width / W),
+            y: (clientY - rect.top) / (rect.height / H),
+        };
     }
 
-    joystickZone.addEventListener('touchstart',e=>{ e.preventDefault(); e.stopPropagation(); initAudio(); if(!joystickActive&&e.touches.length===1){ joystickActive=true; joystickTouchId=e.touches[0].identifier; handleJoystickMove(e.touches[0].clientX,e.touches[0].clientY); } },{passive:false});
-    joystickZone.addEventListener('touchmove',e=>{ e.preventDefault(); e.stopPropagation(); if(joystickActive){ for(const t of e.touches){ if(t.identifier===joystickTouchId){ handleJoystickMove(t.clientX,t.clientY); break; } } } },{passive:false});
-    joystickZone.addEventListener('touchend',e=>{ e.preventDefault(); e.stopPropagation(); for(const t of e.changedTouches){ if(t.identifier===joystickTouchId){ joystickActive=false; joystickTouchId=null; resetJoystick(); break; } } });
-    joystickZone.addEventListener('touchcancel',()=>{ joystickActive=false; joystickTouchId=null; resetJoystick(); });
-    joystickZone.addEventListener('mousedown',e=>{ e.preventDefault(); e.stopPropagation(); initAudio(); joystickActive=true; handleJoystickMove(e.clientX,e.clientY); });
-    window.addEventListener('mousemove',e=>{ if(joystickActive&&e.buttons===1) handleJoystickMove(e.clientX,e.clientY); });
-    window.addEventListener('mouseup',()=>{ if(joystickActive){ joystickActive=false; resetJoystick(); } });
+    function resetJoystick() {
+        joystickActive = false;
+        joystickTouchId = null;
+        joystickDX = 0;
+        joystickDY = 0;
+        joystickBaseX = 0;
+        joystickBaseY = 0;
+        joystickThumbX = 0;
+        joystickThumbY = 0;
+    }
 
-    const pauseRect = { x: 15, y: 60, w: 40, h: 40 };
-    canvas.addEventListener('click', e => {
+    function updateJoystickFromTouch(cx, cy) {
+        const dx = cx - joystickBaseX;
+        const dy = cy - joystickBaseY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const clamped = Math.min(dist, joystickMaxRadius);
+        if (clamped > 3) {
+            joystickDX = (dx / dist) * (clamped / joystickMaxRadius);
+            joystickDY = (dy / dist) * (clamped / joystickMaxRadius);
+            joystickThumbX = joystickBaseX + (dx / dist) * clamped;
+            joystickThumbY = joystickBaseY + (dy / dist) * clamped;
+        } else {
+            joystickDX = 0;
+            joystickDY = 0;
+            joystickThumbX = joystickBaseX;
+            joystickThumbY = joystickBaseY;
+        }
+    }
+
+    // 暂停按钮区域（扩大并修正位置）
+    const pauseRect = { x: 10, y: 55, w: 48, h: 48 };
+
+    function isInPauseButton(cx, cy) {
+        return cx >= pauseRect.x && cx <= pauseRect.x + pauseRect.w &&
+               cy >= pauseRect.y && cy <= pauseRect.y + pauseRect.h;
+    }
+
+    // 判断是否为游戏操作区域（非UI）
+    function isGameplayArea(cx, cy) {
+        // 暂停按钮区域不算
+        if (isInPauseButton(cx, cy)) return false;
+        // 顶部状态栏区域不算
+        if (cy < 55) return false;
+        return true;
+    }
+
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
         initAudio();
-        const rect = canvas.getBoundingClientRect();
-        const cx = (e.clientX - rect.left) / (rect.width / W);
-        const cy = (e.clientY - rect.top) / (rect.height / H);
-        if ((gameState === STATE.PLAYING || gameState === STATE.WAVE_TRANS || gameState === STATE.PAUSED) &&
-            cx >= pauseRect.x && cx <= pauseRect.x + pauseRect.w && cy >= pauseRect.y && cy <= pauseRect.y + pauseRect.h) {
-            if (gameState === STATE.PAUSED) {
-                gameState = prevPauseState || STATE.PLAYING;
-                audioManager.resumeBGM();
-            } else {
-                prevPauseState = gameState;
-                gameState = STATE.PAUSED;
-                audioManager.pauseBGM();
+        if (gameState === STATE.MENU) return;
+
+        for (const touch of e.changedTouches) {
+            const coords = canvasCoords(touch.clientX, touch.clientY);
+
+            // 升级界面：记录点击
+            if (gameState === STATE.LEVELUP) {
+                window._levelTap = coords;
+                return;
             }
+
+            // 游戏结束/胜利
+            if (gameState === STATE.GAMEOVER || gameState === STATE.VICTORY) {
+                resetGame();
+                return;
+            }
+
+            // 暂停按钮
+            if ((gameState === STATE.PLAYING || gameState === STATE.WAVE_TRANS || gameState === STATE.PAUSED) &&
+                isInPauseButton(coords.x, coords.y)) {
+                if (gameState === STATE.PAUSED) {
+                    gameState = prevPauseState || STATE.PLAYING;
+                    audioManager.resumeBGM();
+                } else {
+                    prevPauseState = gameState;
+                    gameState = STATE.PAUSED;
+                    audioManager.pauseBGM();
+                }
+                return;
+            }
+
+            // 游戏中：激活浮动摇杆
+            if ((gameState === STATE.PLAYING || gameState === STATE.WAVE_TRANS) && isGameplayArea(coords.x, coords.y) && !joystickActive) {
+                joystickActive = true;
+                joystickTouchId = touch.identifier;
+                joystickBaseX = coords.x;
+                joystickBaseY = coords.y;
+                joystickThumbX = coords.x;
+                joystickThumbY = coords.y;
+                joystickDX = 0;
+                joystickDY = 0;
+            }
+        }
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        if (joystickActive && joystickTouchId !== null) {
+            for (const touch of e.touches) {
+                if (touch.identifier === joystickTouchId) {
+                    const coords = canvasCoords(touch.clientX, touch.clientY);
+                    updateJoystickFromTouch(coords.x, coords.y);
+                    break;
+                }
+            }
+        }
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        for (const touch of e.changedTouches) {
+            if (touch.identifier === joystickTouchId) {
+                // 检查是否是升级界面点击
+                if (gameState === STATE.LEVELUP && window._levelTap) {
+                    const coords = canvasCoords(touch.clientX, touch.clientY);
+                    const dx = coords.x - window._levelTap.x;
+                    const dy = coords.y - window._levelTap.y;
+                    if (Math.sqrt(dx*dx+dy*dy) < 15) {
+                        handleLevelUpClick(window._levelTap.x, window._levelTap.y);
+                    }
+                    delete window._levelTap;
+                }
+                resetJoystick();
+                break;
+            }
+        }
+        if (e.touches.length === 0) resetJoystick();
+    }, { passive: false });
+
+    canvas.addEventListener('touchcancel', () => { resetJoystick(); });
+
+    // 鼠标事件（桌面调试）
+    canvas.addEventListener('mousedown', (e) => {
+        initAudio();
+        const coords = canvasCoords(e.clientX, e.clientY);
+        if (gameState === STATE.MENU) return;
+        if (gameState === STATE.LEVELUP) { window._levelTap = coords; return; }
+        if (gameState === STATE.GAMEOVER || gameState === STATE.VICTORY) { resetGame(); return; }
+        if ((gameState === STATE.PLAYING || gameState === STATE.WAVE_TRANS || gameState === STATE.PAUSED) && isInPauseButton(coords.x, coords.y)) {
+            if (gameState === STATE.PAUSED) { gameState = prevPauseState || STATE.PLAYING; audioManager.resumeBGM(); }
+            else { prevPauseState = gameState; gameState = STATE.PAUSED; audioManager.pauseBGM(); }
             return;
         }
-        if (gameState === STATE.LEVELUP) handleLevelUpClick(cx, cy);
-        else if (gameState === STATE.GAMEOVER || gameState === STATE.VICTORY) resetGame();
+        if ((gameState === STATE.PLAYING || gameState === STATE.WAVE_TRANS) && isGameplayArea(coords.x, coords.y)) {
+            joystickActive = true;
+            joystickBaseX = coords.x;
+            joystickBaseY = coords.y;
+            joystickThumbX = coords.x;
+            joystickThumbY = coords.y;
+            joystickDX = 0; joystickDY = 0;
+        }
     });
-    let prevPauseState = STATE.PLAYING;
+    canvas.addEventListener('mousemove', (e) => {
+        if (joystickActive) {
+            const coords = canvasCoords(e.clientX, e.clientY);
+            updateJoystickFromTouch(coords.x, coords.y);
+        }
+    });
+    canvas.addEventListener('mouseup', (e) => {
+        if (gameState === STATE.LEVELUP && window._levelTap) {
+            const coords = canvasCoords(e.clientX, e.clientY);
+            if (Math.hypot(coords.x - window._levelTap.x, coords.y - window._levelTap.y) < 10) {
+                handleLevelUpClick(window._levelTap.x, window._levelTap.y);
+            }
+            delete window._levelTap;
+        }
+        resetJoystick();
+    });
+    canvas.addEventListener('mouseleave', () => { resetJoystick(); });
 
+    let prevPauseState = STATE.PLAYING;
     const keys = {};
     window.addEventListener('keydown', e => {
         keys[e.key.toLowerCase()] = true;
@@ -606,11 +721,11 @@
         pendingMemeImages=cropped; selectedPlayerPhotoIndex=-1; showPhotoAssignPanel();
     }
     function cropCircle(img,size){ return new Promise(resolve=>{ const c=document.createElement('canvas'); c.width=size; c.height=size; const cx=c.getContext('2d'); cx.beginPath(); cx.arc(size/2,size/2,size/2,0,Math.PI*2); cx.clip(); const min=Math.min(img.width,img.height); cx.drawImage(img,(img.width-min)/2,(img.height-min)/2,min,min,0,0,size,size); const r=new Image(); r.onload=()=>resolve(r); r.src=c.toDataURL(); if(r.complete) resolve(r); }); }
-    function showPhotoAssignPanel(){ photoGrid.innerHTML=''; pendingMemeImages.forEach((img,i)=>{ const s=document.createElement('img'); s.src=img.src; s.className='photo-slot'; s.addEventListener('click',()=>selectPlayerPhoto(i)); photoGrid.appendChild(s); }); selectedPlayerPhotoIndex=-1; assignHint.textContent='👆 请点击选择你的角色照片'; updatePhotoSlotStyles(); menuButtons.style.display='none'; photoAssignPanel.style.display='flex'; joystickZone.style.display='none'; }
+    function showPhotoAssignPanel(){ photoGrid.innerHTML=''; pendingMemeImages.forEach((img,i)=>{ const s=document.createElement('img'); s.src=img.src; s.className='photo-slot'; s.addEventListener('click',()=>selectPlayerPhoto(i)); photoGrid.appendChild(s); }); selectedPlayerPhotoIndex=-1; assignHint.textContent='👆 请点击选择你的角色照片'; updatePhotoSlotStyles(); menuButtons.style.display='none'; photoAssignPanel.style.display='flex'; }
     function selectPlayerPhoto(i){ selectedPlayerPhotoIndex=i; assignHint.textContent='✅ 已选择！'; updatePhotoSlotStyles(); }
     function updatePhotoSlotStyles(){ const ss=photoGrid.querySelectorAll('.photo-slot'); ss.forEach((s,i)=>{ s.classList.remove('selected-player','selected-enemy'); if(i===selectedPlayerPhotoIndex) s.classList.add('selected-player'); else if(selectedPlayerPhotoIndex>=0) s.classList.add('selected-enemy'); }); }
-    function confirmPhotoAssignment(){ if(selectedPlayerPhotoIndex<0&&pendingMemeImages.length>0) selectedPlayerPhotoIndex=0; if(pendingMemeImages.length===0)return; memePlayerImg=pendingMemeImages[selectedPlayerPhotoIndex]; memeEnemyImgs=[]; for(let i=0;i<pendingMemeImages.length;i++){ if(i!==selectedPlayerPhotoIndex) memeEnemyImgs.push(pendingMemeImages[i]); } if(memeEnemyImgs.length===0) memeEnemyImgs.push(pendingMemeImages[0]); photoAssignPanel.style.display='none'; menuButtons.style.display='none'; joystickZone.style.display='block'; pendingMemeImages=[]; startGame('meme'); }
-    function cancelPhotoAssignment(){ photoAssignPanel.style.display='none'; menuButtons.style.display='flex'; joystickZone.style.display='none'; pendingMemeImages=[]; selectedPlayerPhotoIndex=-1; memePlayerImg=null; memeEnemyImgs=[]; }
+    function confirmPhotoAssignment(){ if(selectedPlayerPhotoIndex<0&&pendingMemeImages.length>0) selectedPlayerPhotoIndex=0; if(pendingMemeImages.length===0)return; memePlayerImg=pendingMemeImages[selectedPlayerPhotoIndex]; memeEnemyImgs=[]; for(let i=0;i<pendingMemeImages.length;i++){ if(i!==selectedPlayerPhotoIndex) memeEnemyImgs.push(pendingMemeImages[i]); } if(memeEnemyImgs.length===0) memeEnemyImgs.push(pendingMemeImages[0]); photoAssignPanel.style.display='none'; menuButtons.style.display='none'; pendingMemeImages=[]; startGame('meme'); }
+    function cancelPhotoAssignment(){ photoAssignPanel.style.display='none'; menuButtons.style.display='flex'; pendingMemeImages=[]; selectedPlayerPhotoIndex=-1; memePlayerImg=null; memeEnemyImgs=[]; }
 
     function render(){
         ctx.clearRect(0,0,W,H);
@@ -637,25 +752,58 @@
         for(const p of particles){ const a=p.life/p.maxLife; ctx.globalAlpha=a; ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill(); } ctx.globalAlpha=1;
         for(const d of damageNumbers){ ctx.globalAlpha=d.life/d.maxLife; ctx.fillStyle=d.color; ctx.font='bold 15px sans-serif'; ctx.textAlign='center'; ctx.fillText(d.value,d.x,d.y); } ctx.globalAlpha=1;
         ctx.restore();
+
+        // 绘制浮动摇杆（在游戏区域）
+        if (joystickActive && (gameState === STATE.PLAYING || gameState === STATE.WAVE_TRANS)) {
+            ctx.save();
+            // 基座
+            ctx.fillStyle = 'rgba(255,255,255,0.12)';
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(joystickBaseX, joystickBaseY, joystickMaxRadius, 0, Math.PI*2);
+            ctx.fill();
+            ctx.stroke();
+            // 拇指
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.beginPath();
+            ctx.arc(joystickThumbX, joystickThumbY, 22, 0, Math.PI*2);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+            ctx.restore();
+        }
+
         renderUI();
     }
 
     function renderUI(){
-        ctx.fillStyle='rgba(0,0,0,0.7)'; ctx.fillRect(0,0,W,50);
+        // 顶部状态栏
+        ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.fillRect(0,0,W,52);
         ctx.fillStyle='#fff'; ctx.font='bold 10px sans-serif'; ctx.textAlign='left';
-        ctx.fillText(`❤️ ${Math.ceil(player.hp)}/${player.maxHp}`,12,22);
-        ctx.fillText(`⭐ Lv${player.level}`,12,40);
+        ctx.fillText(`❤️ ${Math.ceil(player.hp)}/${player.maxHp}`,12,20);
+        ctx.fillText(`⭐ Lv${player.level}`,12,38);
         ctx.textAlign='right';
-        ctx.fillText(`${STAGES[Math.min(stageIndex,STAGES.length-1)].name} | 波${waveNumber}`,W-12,22);
-        ctx.fillText(`击杀: ${totalKills}`,W-12,40);
+        ctx.fillText(`${STAGES[Math.min(stageIndex,STAGES.length-1)].name} | 波${waveNumber}`,W-12,20);
+        ctx.fillText(`击杀: ${totalKills}`,W-12,38);
         for(let i=0;i<player.weapons.length;i++){ const w=player.weapons[i]; ctx.fillStyle=w.glow; ctx.font='9px sans-serif'; ctx.fillText(`${w.name} Lv${w.level}`,W-12,H-15-i*16); }
 
+        // 暂停按钮
         if(gameState===STATE.PLAYING||gameState===STATE.WAVE_TRANS||gameState===STATE.PAUSED){
-            ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=2;
-            ctx.beginPath(); ctx.roundRect(pauseRect.x,pauseRect.y,pauseRect.w,pauseRect.h,8); ctx.fill(); ctx.stroke();
-            ctx.fillStyle='#fff'; ctx.font='20px sans-serif'; ctx.textAlign='center';
-            ctx.fillText(gameState===STATE.PAUSED?'▶':'⏸',pauseRect.x+pauseRect.w/2,pauseRect.y+pauseRect.h/2+7);
+            ctx.fillStyle='rgba(255,255,255,0.2)';
+            ctx.strokeStyle='rgba(255,255,255,0.7)';
+            ctx.lineWidth=2.5;
+            ctx.beginPath();
+            ctx.roundRect(pauseRect.x, pauseRect.y, pauseRect.w, pauseRect.h, 10);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle='#fff';
+            ctx.font='bold 22px sans-serif';
+            ctx.textAlign='center';
+            ctx.fillText(gameState===STATE.PAUSED?'▶':'⏸', pauseRect.x + pauseRect.w/2, pauseRect.y + pauseRect.h/2 + 7);
         }
+
         if(gameState===STATE.WAVE_TRANS){
             ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.font='bold 22px sans-serif'; ctx.textAlign='center';
             ctx.fillText(`⚔ 第 ${waveNumber+1} 波即将开始`,W/2,H/2-30);
@@ -690,9 +838,26 @@
             renderResultPanel();
         }
         if(gameState===STATE.MENU){
-            ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(0,0,W,H);
-            ctx.fillStyle='#fff'; ctx.font='bold 34px sans-serif'; ctx.textAlign='center'; ctx.fillText('🌙 暗夜幸存者',W/2,H/2-80);
-            ctx.fillStyle='#aaa'; ctx.font='13px sans-serif';
+            // 酷炫开始界面由CSS+Canvas混合渲染
+            ctx.fillStyle='rgba(0,0,0,0.65)'; ctx.fillRect(0,0,W,H);
+            // 标题
+            const titleGrad = ctx.createLinearGradient(W/2-150, H*0.2, W/2+150, H*0.2);
+            titleGrad.addColorStop(0, '#ffd700');
+            titleGrad.addColorStop(0.5, '#ffaa40');
+            titleGrad.addColorStop(1, '#ffd700');
+            ctx.fillStyle = titleGrad;
+            ctx.font = 'bold 48px "PingFang SC","Microsoft YaHei",sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🌙 暗夜幸存者', W/2, H*0.25);
+            // 副标题
+            ctx.fillStyle = '#d4aaff';
+            ctx.font = 'bold 16px "PingFang SC","Microsoft YaHei",sans-serif';
+            ctx.fillText('SHADOW SURVIVOR', W/2, H*0.25 + 40);
+            // 底部提示
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.font = '13px sans-serif';
+            ctx.fillText('选择模式开始游戏', W/2, H*0.82);
+            ctx.fillText('音频文件：bgm.mp3 / hit*.mp3 / pickup.mp3', W/2, H*0.86);
         }
     }
 
@@ -749,9 +914,9 @@
         requestAnimationFrame(gameLoop);
     }
     document.addEventListener('touchmove',e=>{ if(e.target.closest('#game-container')) e.preventDefault(); },{passive:false});
-    resetPlayer(); gameState=STATE.MENU; menuButtons.style.display='flex'; joystickZone.style.display='none';
+    resetPlayer(); gameState=STATE.MENU; menuButtons.style.display='flex'; photoAssignPanel.style.display='none';
     requestAnimationFrame(gameLoop);
-    console.log('✅ 已启动！');
+    console.log('✅ 极致优化版已启动！浮动摇杆、精准暂停、酷炫菜单、音频节流');
 })();
 </script>
 </body>
