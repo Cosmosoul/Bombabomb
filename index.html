@@ -10,8 +10,8 @@
         html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'PingFang SC','Microsoft YaHei',sans-serif; touch-action: none; position: fixed; top: 0; left: 0; }
         #game-container { position: relative; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #000; }
         canvas { display: block; width: 100%; height: 100%; object-fit: contain; touch-action: none; }
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 12vh; }
-        #menu-buttons { display: flex; flex-direction: column; align-items: center; gap: 14px; pointer-events: auto; margin-top: 15vh; }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 8vh; }
+        #menu-buttons { display: flex; flex-direction: column; align-items: center; gap: 14px; pointer-events: auto; margin-top: 17vh; }
         .menu-btn { background: linear-gradient(135deg, #3a1e5c, #1e1e3a); border: 2px solid #b27aff; color: #f0e6ff; padding: 14px 40px; border-radius: 40px; font-size: 1.3rem; font-weight: bold; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 32px rgba(150,80,255,0.55); text-shadow: 0 0 12px #b27aff; letter-spacing: 2px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; pointer-events: auto; min-width: 200px; text-align: center; }
         .menu-btn:active { background: linear-gradient(135deg, #5a2e8a, #2e2e5a); box-shadow: 0 0 55px rgba(180,100,255,0.95); border-color: #d4aaff; transform: scale(0.95); }
         .menu-btn.special { background: linear-gradient(135deg, #4a2a1a, #2a1a2a); border-color: #ffaa60; box-shadow: 0 0 32px rgba(255,120,40,0.6); color: #ffe0cc; text-shadow: 0 0 12px #ff8844; }
@@ -71,7 +71,7 @@
     canvas.width = W;
     canvas.height = H;
 
-    // ==================== 音频管理器 (带节流) ====================
+    // ==================== 音频管理器 ====================
     const audioManager = {
         bgmAudio: null,
         hasBGM: false,
@@ -81,20 +81,18 @@
         hasHit: {},
         sfxVolume: 0.5,
         bgmVolume: 0.35,
-        playHistory: {},  // 节流记录
+        playHistory: {},
 
         init() {
             this.bgmAudio = new Audio();
             this.bgmAudio.loop = true;
             this.bgmAudio.volume = this.bgmVolume;
-            this.bgmAudio.preload = 'auto';
             this.bgmAudio.src = 'bgm.mp3';
             this.bgmAudio.addEventListener('canplaythrough', () => { this.hasBGM = true; }, { once: true });
             this.bgmAudio.load();
 
             this.pickupAudio = new Audio();
             this.pickupAudio.volume = this.sfxVolume;
-            this.pickupAudio.preload = 'auto';
             this.pickupAudio.src = 'pickup.mp3';
             this.pickupAudio.addEventListener('canplaythrough', () => { this.hasPickup = true; }, { once: true });
             this.pickupAudio.load();
@@ -111,7 +109,6 @@
             };
             const defaultAudio = new Audio();
             defaultAudio.volume = this.sfxVolume;
-            defaultAudio.preload = 'auto';
             defaultAudio.src = 'hit.mp3';
             defaultAudio.addEventListener('canplaythrough', () => { this.hitAudios['default'] = defaultAudio; this.hasHit['default'] = true; }, { once: true });
             defaultAudio.load();
@@ -120,7 +117,6 @@
             Object.entries(weaponHitMap).forEach(([type, file]) => {
                 const audio = new Audio();
                 audio.volume = this.sfxVolume;
-                audio.preload = 'auto';
                 audio.src = file;
                 audio.addEventListener('canplaythrough', () => { this.hitAudios[type] = audio; this.hasHit[type] = true; }, { once: true });
                 audio.load();
@@ -132,7 +128,6 @@
             const now = Date.now();
             if (!this.playHistory[audioKey]) this.playHistory[audioKey] = [];
             const history = this.playHistory[audioKey];
-            // 清理超过1秒的记录
             while (history.length > 0 && now - history[0] > 1000) history.shift();
             if (history.length >= 5) return false;
             history.push(now);
@@ -235,13 +230,13 @@
     let pendingMemeImages = [];
     let selectedPlayerPhotoIndex = -1;
 
-    // ==================== 浮动摇杆状态 ====================
+    // ==================== 摇杆状态 ====================
     let joystickActive = false;
     let joystickTouchId = null;
-    let joystickBaseX = 0, joystickBaseY = 0;   // 摇杆基准点（手指落点）
-    let joystickThumbX = 0, joystickThumbY = 0; // 拇指当前位置
-    let joystickDX = 0, joystickDY = 0;         // 归一化方向
-    const joystickMaxRadius = 55;                // 摇杆最大半径
+    let joystickBaseX = 0, joystickBaseY = 0;
+    let joystickThumbX = 0, joystickThumbY = 0;
+    let joystickDX = 0, joystickDY = 0;
+    const joystickMaxRadius = 55;
 
     let totalDamageDealt = 0;
     let totalDamageReceived = 0;
@@ -365,7 +360,16 @@
         currentUpgradeOptions=[]; upgradeCardRects=[]; gameState=STATE.PLAYING; player.invincibleTimer=0.5;
         for(let i=0;i<50;i++){ const a=Math.random()*Math.PI*2; spawnParticle(player.x,player.y,Math.cos(a)*200,Math.sin(a)*200,'#ffe8a0',0.6,3.5); }
     }
-    function handleLevelUpClick(cx,cy){ for(let i=0;i<upgradeCardRects.length;i++){ const r=upgradeCardRects[i]; if(cx>=r.x&&cx<=r.x+r.w&&cy>=r.y&&cy<=r.y+r.h){ applyUpgrade(i); return; } } }
+    function handleLevelUpClick(cx,cy){ 
+        console.log('尝试升级点击', cx, cy, upgradeCardRects);
+        for(let i=0;i<upgradeCardRects.length;i++){ 
+            const r=upgradeCardRects[i]; 
+            if(cx>=r.x&&cx<=r.x+r.w&&cy>=r.y&&cy<=r.y+r.h){ 
+                applyUpgrade(i); 
+                return; 
+            } 
+        } 
+    }
     function handleLevelUpKey(key){ const n=parseInt(key); if(n>=1&&n<=currentUpgradeOptions.length) applyUpgrade(n-1); }
 
     let explodingNow = false;
@@ -513,7 +517,7 @@
     function updateDamageNumbers(dt){ for(let i=damageNumbers.length-1;i>=0;i--){ const d=damageNumbers[i]; d.y+=d.vy*dt; d.life-=dt; if(d.life<=0)damageNumbers.splice(i,1); } }
     function updateLightningArcs(dt){ for(let i=lightningArcs.length-1;i>=0;i--){ if((lightningArcs[i].life-=dt)<=0)lightningArcs.splice(i,1); } }
 
-    // ==================== 浮动摇杆处理 ====================
+    // ==================== 坐标转换 ====================
     function canvasCoords(clientX, clientY) {
         const rect = canvas.getBoundingClientRect();
         return {
@@ -527,10 +531,6 @@
         joystickTouchId = null;
         joystickDX = 0;
         joystickDY = 0;
-        joystickBaseX = 0;
-        joystickBaseY = 0;
-        joystickThumbX = 0;
-        joystickThumbY = 0;
     }
 
     function updateJoystickFromTouch(cx, cy) {
@@ -551,68 +551,67 @@
         }
     }
 
-    // 暂停按钮区域（扩大并修正位置）
     const pauseRect = { x: 10, y: 55, w: 48, h: 48 };
-
     function isInPauseButton(cx, cy) {
         return cx >= pauseRect.x && cx <= pauseRect.x + pauseRect.w &&
                cy >= pauseRect.y && cy <= pauseRect.y + pauseRect.h;
     }
 
-    // 判断是否为游戏操作区域（非UI）
     function isGameplayArea(cx, cy) {
-        // 暂停按钮区域不算
         if (isInPauseButton(cx, cy)) return false;
-        // 顶部状态栏区域不算
         if (cy < 55) return false;
         return true;
     }
+
+    // 统一的触摸处理，不再使用click事件
+    let touchStartCoords = null;
+    let touchStartTime = 0;
 
     canvas.addEventListener('touchstart', (e) => {
         e.preventDefault();
         initAudio();
         if (gameState === STATE.MENU) return;
 
-        for (const touch of e.changedTouches) {
-            const coords = canvasCoords(touch.clientX, touch.clientY);
+        const touch = e.changedTouches[0];
+        const coords = canvasCoords(touch.clientX, touch.clientY);
+        touchStartCoords = { x: coords.x, y: coords.y };
+        touchStartTime = Date.now();
 
-            // 升级界面：记录点击
-            if (gameState === STATE.LEVELUP) {
-                window._levelTap = coords;
-                return;
-            }
+        // 游戏结束/胜利：任意触摸重置
+        if (gameState === STATE.GAMEOVER || gameState === STATE.VICTORY) {
+            resetGame();
+            return;
+        }
 
-            // 游戏结束/胜利
-            if (gameState === STATE.GAMEOVER || gameState === STATE.VICTORY) {
-                resetGame();
-                return;
+        // 暂停按钮（最优先）
+        if ((gameState === STATE.PLAYING || gameState === STATE.WAVE_TRANS || gameState === STATE.PAUSED) &&
+            isInPauseButton(coords.x, coords.y)) {
+            if (gameState === STATE.PAUSED) {
+                gameState = prevPauseState || STATE.PLAYING;
+                audioManager.resumeBGM();
+            } else {
+                prevPauseState = gameState;
+                gameState = STATE.PAUSED;
+                audioManager.pauseBGM();
             }
+            return;
+        }
 
-            // 暂停按钮
-            if ((gameState === STATE.PLAYING || gameState === STATE.WAVE_TRANS || gameState === STATE.PAUSED) &&
-                isInPauseButton(coords.x, coords.y)) {
-                if (gameState === STATE.PAUSED) {
-                    gameState = prevPauseState || STATE.PLAYING;
-                    audioManager.resumeBGM();
-                } else {
-                    prevPauseState = gameState;
-                    gameState = STATE.PAUSED;
-                    audioManager.pauseBGM();
-                }
-                return;
-            }
+        // 升级界面：记录准备点击
+        if (gameState === STATE.LEVELUP) {
+            return; // 升级点击在touchend中处理
+        }
 
-            // 游戏中：激活浮动摇杆
-            if ((gameState === STATE.PLAYING || gameState === STATE.WAVE_TRANS) && isGameplayArea(coords.x, coords.y) && !joystickActive) {
-                joystickActive = true;
-                joystickTouchId = touch.identifier;
-                joystickBaseX = coords.x;
-                joystickBaseY = coords.y;
-                joystickThumbX = coords.x;
-                joystickThumbY = coords.y;
-                joystickDX = 0;
-                joystickDY = 0;
-            }
+        // 游戏中：激活浮动摇杆
+        if ((gameState === STATE.PLAYING || gameState === STATE.WAVE_TRANS) && isGameplayArea(coords.x, coords.y) && !joystickActive) {
+            joystickActive = true;
+            joystickTouchId = touch.identifier;
+            joystickBaseX = coords.x;
+            joystickBaseY = coords.y;
+            joystickThumbX = coords.x;
+            joystickThumbY = coords.y;
+            joystickDX = 0;
+            joystickDY = 0;
         }
     }, { passive: false });
 
@@ -631,39 +630,50 @@
 
     canvas.addEventListener('touchend', (e) => {
         e.preventDefault();
+        // 处理升级点击
+        if (gameState === STATE.LEVELUP && touchStartCoords) {
+            const touch = e.changedTouches[0];
+            const coords = canvasCoords(touch.clientX, touch.clientY);
+            const dx = coords.x - touchStartCoords.x;
+            const dy = coords.y - touchStartCoords.y;
+            const dist = Math.sqrt(dx*dx+dy*dy);
+            if (dist < 25) { // 放宽阈值
+                handleLevelUpClick(touchStartCoords.x, touchStartCoords.y);
+            }
+            touchStartCoords = null;
+            return;
+        }
+
+        // 释放摇杆
         for (const touch of e.changedTouches) {
             if (touch.identifier === joystickTouchId) {
-                // 检查是否是升级界面点击
-                if (gameState === STATE.LEVELUP && window._levelTap) {
-                    const coords = canvasCoords(touch.clientX, touch.clientY);
-                    const dx = coords.x - window._levelTap.x;
-                    const dy = coords.y - window._levelTap.y;
-                    if (Math.sqrt(dx*dx+dy*dy) < 15) {
-                        handleLevelUpClick(window._levelTap.x, window._levelTap.y);
-                    }
-                    delete window._levelTap;
-                }
                 resetJoystick();
                 break;
             }
         }
         if (e.touches.length === 0) resetJoystick();
+        touchStartCoords = null;
     }, { passive: false });
 
-    canvas.addEventListener('touchcancel', () => { resetJoystick(); });
+    canvas.addEventListener('touchcancel', () => {
+        resetJoystick();
+        touchStartCoords = null;
+    });
 
-    // 鼠标事件（桌面调试）
+    // 鼠标支持（桌面调试，同样不依赖click）
+    let mouseStartCoords = null;
     canvas.addEventListener('mousedown', (e) => {
         initAudio();
         const coords = canvasCoords(e.clientX, e.clientY);
+        mouseStartCoords = { x: coords.x, y: coords.y };
         if (gameState === STATE.MENU) return;
-        if (gameState === STATE.LEVELUP) { window._levelTap = coords; return; }
         if (gameState === STATE.GAMEOVER || gameState === STATE.VICTORY) { resetGame(); return; }
         if ((gameState === STATE.PLAYING || gameState === STATE.WAVE_TRANS || gameState === STATE.PAUSED) && isInPauseButton(coords.x, coords.y)) {
             if (gameState === STATE.PAUSED) { gameState = prevPauseState || STATE.PLAYING; audioManager.resumeBGM(); }
             else { prevPauseState = gameState; gameState = STATE.PAUSED; audioManager.pauseBGM(); }
             return;
         }
+        if (gameState === STATE.LEVELUP) return;
         if ((gameState === STATE.PLAYING || gameState === STATE.WAVE_TRANS) && isGameplayArea(coords.x, coords.y)) {
             joystickActive = true;
             joystickBaseX = coords.x;
@@ -680,16 +690,17 @@
         }
     });
     canvas.addEventListener('mouseup', (e) => {
-        if (gameState === STATE.LEVELUP && window._levelTap) {
+        if (gameState === STATE.LEVELUP && mouseStartCoords) {
             const coords = canvasCoords(e.clientX, e.clientY);
-            if (Math.hypot(coords.x - window._levelTap.x, coords.y - window._levelTap.y) < 10) {
-                handleLevelUpClick(window._levelTap.x, window._levelTap.y);
-            }
-            delete window._levelTap;
+            const dist = Math.hypot(coords.x - mouseStartCoords.x, coords.y - mouseStartCoords.y);
+            if (dist < 10) handleLevelUpClick(mouseStartCoords.x, mouseStartCoords.y);
+            mouseStartCoords = null;
+            return;
         }
         resetJoystick();
+        mouseStartCoords = null;
     });
-    canvas.addEventListener('mouseleave', () => { resetJoystick(); });
+    canvas.addEventListener('mouseleave', () => { resetJoystick(); mouseStartCoords = null; });
 
     let prevPauseState = STATE.PLAYING;
     const keys = {};
@@ -727,6 +738,7 @@
     function confirmPhotoAssignment(){ if(selectedPlayerPhotoIndex<0&&pendingMemeImages.length>0) selectedPlayerPhotoIndex=0; if(pendingMemeImages.length===0)return; memePlayerImg=pendingMemeImages[selectedPlayerPhotoIndex]; memeEnemyImgs=[]; for(let i=0;i<pendingMemeImages.length;i++){ if(i!==selectedPlayerPhotoIndex) memeEnemyImgs.push(pendingMemeImages[i]); } if(memeEnemyImgs.length===0) memeEnemyImgs.push(pendingMemeImages[0]); photoAssignPanel.style.display='none'; menuButtons.style.display='none'; pendingMemeImages=[]; startGame('meme'); }
     function cancelPhotoAssignment(){ photoAssignPanel.style.display='none'; menuButtons.style.display='flex'; pendingMemeImages=[]; selectedPlayerPhotoIndex=-1; memePlayerImg=null; memeEnemyImgs=[]; }
 
+    // ==================== 渲染 ====================
     function render(){
         ctx.clearRect(0,0,W,H);
         let sx=0,sy=0; if(shakeAmount>0.3){ sx=(Math.random()-0.5)*shakeAmount; sy=(Math.random()-0.5)*shakeAmount; }
@@ -753,10 +765,9 @@
         for(const d of damageNumbers){ ctx.globalAlpha=d.life/d.maxLife; ctx.fillStyle=d.color; ctx.font='bold 15px sans-serif'; ctx.textAlign='center'; ctx.fillText(d.value,d.x,d.y); } ctx.globalAlpha=1;
         ctx.restore();
 
-        // 绘制浮动摇杆（在游戏区域）
+        // 绘制浮动摇杆
         if (joystickActive && (gameState === STATE.PLAYING || gameState === STATE.WAVE_TRANS)) {
             ctx.save();
-            // 基座
             ctx.fillStyle = 'rgba(255,255,255,0.12)';
             ctx.strokeStyle = 'rgba(255,255,255,0.4)';
             ctx.lineWidth = 2;
@@ -764,7 +775,6 @@
             ctx.arc(joystickBaseX, joystickBaseY, joystickMaxRadius, 0, Math.PI*2);
             ctx.fill();
             ctx.stroke();
-            // 拇指
             ctx.fillStyle = 'rgba(255,255,255,0.5)';
             ctx.beginPath();
             ctx.arc(joystickThumbX, joystickThumbY, 22, 0, Math.PI*2);
@@ -779,7 +789,6 @@
     }
 
     function renderUI(){
-        // 顶部状态栏
         ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.fillRect(0,0,W,52);
         ctx.fillStyle='#fff'; ctx.font='bold 10px sans-serif'; ctx.textAlign='left';
         ctx.fillText(`❤️ ${Math.ceil(player.hp)}/${player.maxHp}`,12,20);
@@ -789,7 +798,6 @@
         ctx.fillText(`击杀: ${totalKills}`,W-12,38);
         for(let i=0;i<player.weapons.length;i++){ const w=player.weapons[i]; ctx.fillStyle=w.glow; ctx.font='9px sans-serif'; ctx.fillText(`${w.name} Lv${w.level}`,W-12,H-15-i*16); }
 
-        // 暂停按钮
         if(gameState===STATE.PLAYING||gameState===STATE.WAVE_TRANS||gameState===STATE.PAUSED){
             ctx.fillStyle='rgba(255,255,255,0.2)';
             ctx.strokeStyle='rgba(255,255,255,0.7)';
@@ -803,7 +811,6 @@
             ctx.textAlign='center';
             ctx.fillText(gameState===STATE.PAUSED?'▶':'⏸', pauseRect.x + pauseRect.w/2, pauseRect.y + pauseRect.h/2 + 7);
         }
-
         if(gameState===STATE.WAVE_TRANS){
             ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.font='bold 22px sans-serif'; ctx.textAlign='center';
             ctx.fillText(`⚔ 第 ${waveNumber+1} 波即将开始`,W/2,H/2-30);
@@ -838,22 +845,18 @@
             renderResultPanel();
         }
         if(gameState===STATE.MENU){
-            // 酷炫开始界面由CSS+Canvas混合渲染
             ctx.fillStyle='rgba(0,0,0,0.65)'; ctx.fillRect(0,0,W,H);
-            // 标题
-            const titleGrad = ctx.createLinearGradient(W/2-150, H*0.2, W/2+150, H*0.2);
+            const titleGrad = ctx.createLinearGradient(W/2-150, H*0.15, W/2+150, H*0.15);
             titleGrad.addColorStop(0, '#ffd700');
             titleGrad.addColorStop(0.5, '#ffaa40');
             titleGrad.addColorStop(1, '#ffd700');
             ctx.fillStyle = titleGrad;
             ctx.font = 'bold 48px "PingFang SC","Microsoft YaHei",sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('🌙 暗夜幸存者', W/2, H*0.25);
-            // 副标题
+            ctx.fillText('🌙 暗夜幸存者', W/2, H*0.18);
             ctx.fillStyle = '#d4aaff';
             ctx.font = 'bold 16px "PingFang SC","Microsoft YaHei",sans-serif';
-            ctx.fillText('SHADOW SURVIVOR', W/2, H*0.25 + 40);
-            // 底部提示
+            ctx.fillText('SHADOW SURVIVOR', W/2, H*0.18 + 40);
             ctx.fillStyle = 'rgba(255,255,255,0.5)';
             ctx.font = '13px sans-serif';
             ctx.fillText('选择模式开始游戏', W/2, H*0.82);
@@ -867,9 +870,7 @@
         const seconds = elapsed % 60;
         const timeStr = `${minutes}分${seconds}秒`;
         const isVictory = gameState === STATE.VICTORY;
-
-        ctx.fillStyle = 'rgba(0,0,0,0.8)';
-        ctx.fillRect(0,0,W,H);
+        ctx.fillStyle = 'rgba(0,0,0,0.8)'; ctx.fillRect(0,0,W,H);
         const panelW = 380, panelH = 420;
         const px = (W - panelW) / 2, py = (H - panelH) / 2 - 30;
         ctx.fillStyle = 'rgba(20,15,35,0.95)';
@@ -915,7 +916,7 @@
     document.addEventListener('touchmove',e=>{ if(e.target.closest('#game-container')) e.preventDefault(); },{passive:false});
     resetPlayer(); gameState=STATE.MENU; menuButtons.style.display='flex'; photoAssignPanel.style.display='none';
     requestAnimationFrame(gameLoop);
-    console.log('✅ 极致优化版已启动！浮动摇杆、精准暂停、酷炫菜单、音频节流');
+    console.log('✅ 已启动');
 })();
 </script>
 </body>
