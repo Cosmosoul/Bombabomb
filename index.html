@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, touch-action: none">
-    <title>暗夜幸存者 · 头像修复版</title>
+    <title>邦巴崩</title>
     <style>
         :root { --bg: #050510; }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
@@ -16,55 +16,17 @@
         .menu-btn:active { background: linear-gradient(135deg, #5a2e8a, #2e2e5a); box-shadow: 0 0 55px rgba(180,100,255,0.95); border-color: #d4aaff; transform: scale(0.95); }
         .menu-btn.special { background: linear-gradient(135deg, #4a2a1a, #2a1a2a); border-color: #ffaa60; box-shadow: 0 0 32px rgba(255,120,40,0.6); color: #ffe0cc; text-shadow: 0 0 12px #ff8844; }
         .menu-btn.hard { background: linear-gradient(135deg, #2a1010, #1a0505); border-color: #ff4444; box-shadow: 0 0 36px rgba(255,50,50,0.65); color: #ffcccc; text-shadow: 0 0 14px #ff3333; }
-        #photo-assign-panel {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-            pointer-events: auto;
-            background: rgba(10,5,20,0.93);
-            border: 2px solid #b27aff;
-            border-radius: 22px;
-            padding: 22px;
-            width: 90vw;
-            max-width: 400px;
-            box-shadow: 0 0 70px rgba(120,40,200,0.7);
-            z-index: 20;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
+        .menu-btn.rush { background: linear-gradient(135deg, #1a2a1a, #0a1a0a); border-color: #44ff44; box-shadow: 0 0 36px rgba(50,255,50,0.65); color: #ccffcc; text-shadow: 0 0 14px #33ff33; }
+        #photo-assign-panel { display: none; flex-direction: column; align-items: center; gap: 12px; pointer-events: auto; background: rgba(10,5,20,0.93); border: 2px solid #b27aff; border-radius: 22px; padding: 22px; width: 90vw; max-width: 400px; box-shadow: 0 0 70px rgba(120,40,200,0.7); z-index: 20; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
         #photo-assign-panel h3 { color: #ffe8c0; font-size: 1.2rem; text-align: center; margin: 0; }
-        .photo-grid {
-            display: flex;
-            flex-direction: row;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: center;
-            gap: 12px;
-            max-height: 45vh;
-            overflow-y: auto;
-            padding: 5px;
-            width: 100%;
-        }
-        .photo-slot {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            border: 3px solid #555;
-            cursor: pointer;
-            transition: all 0.15s;
-            object-fit: cover;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-            flex-shrink: 0;
-        }
+        .photo-grid { display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; max-height: 45vh; overflow-y: auto; padding: 5px; width: 100%; }
+        .photo-slot { width: 70px; height: 70px; border-radius: 50%; border: 3px solid #555; cursor: pointer; transition: all 0.15s; object-fit: cover; -webkit-tap-highlight-color: transparent; touch-action: manipulation; flex-shrink: 0; }
         .photo-slot.selected-player { border-color: #ffd700 !important; box-shadow: 0 0 28px rgba(255,215,0,0.85) !important; transform: scale(1.1); }
         .photo-slot.selected-enemy { border-color: #ff4444 !important; box-shadow: 0 0 18px rgba(255,60,60,0.55) !important; }
         #btn-confirm-assign, #btn-cancel-assign { background: linear-gradient(135deg, #5a3a1e, #3a1e1e); border: 2px solid #ffaa60; color: #ffe0cc; padding: 12px 32px; border-radius: 32px; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 0 22px rgba(255,120,40,0.55); -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
         #btn-cancel-assign { background: transparent; border: 1px solid #888; color: #ccc; box-shadow: none; }
         .hidden-input { position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none; }
+        #pause-exit-btn { display: none; position: absolute; bottom: 150px; left: 50%; transform: translateX(-50%); pointer-events: auto; background: rgba(255,60,60,0.8); border: 2px solid #ff8888; color: white; padding: 12px 30px; border-radius: 30px; font-size: 1rem; font-weight: bold; cursor: pointer; z-index: 30; }
     </style>
 </head>
 <body>
@@ -75,6 +37,7 @@
             <button class="menu-btn" id="btn-normal">🌙 经典模式</button>
             <button class="menu-btn special" id="btn-meme">📸 恶搞模式</button>
             <button class="menu-btn hard" id="btn-hard">💀 超难模式</button>
+            <button class="menu-btn rush" id="btn-rush">⏱ 极限五分钟</button>
         </div>
         <div id="photo-assign-panel">
             <h3>📷 分配照片角色</h3>
@@ -86,6 +49,7 @@
                 <button id="btn-cancel-assign">↩ 返回</button>
             </div>
         </div>
+        <button id="pause-exit-btn">🚪 退出游戏</button>
     </div>
     <input type="file" id="photoInput" class="hidden-input" accept="image/*" multiple>
 </div>
@@ -100,18 +64,19 @@
     const btnNormal = document.getElementById('btn-normal');
     const btnMeme = document.getElementById('btn-meme');
     const btnHard = document.getElementById('btn-hard');
+    const btnRush = document.getElementById('btn-rush');
     const photoInput = document.getElementById('photoInput');
     const photoAssignPanel = document.getElementById('photo-assign-panel');
     const photoGrid = document.getElementById('photo-grid');
     const btnConfirmAssign = document.getElementById('btn-confirm-assign');
     const btnCancelAssign = document.getElementById('btn-cancel-assign');
     const assignHint = document.getElementById('assign-hint');
+    const pauseExitBtn = document.getElementById('pause-exit-btn');
 
     const W = 480, H = 800;
     canvas.width = W;
     canvas.height = H;
 
-    // ==================== 音频管理器 ====================
     const audioManager = {
         bgmAudio: null, hasBGM: false, pickupAudio: null, hasPickup: false,
         hitAudios: {}, hasHit: {}, sfxVolume: 0.5, bgmVolume: 0.35, playHistory: {},
@@ -124,6 +89,8 @@
                 'magicBolt': 'hit_normal.mp3', 'spinningShield': 'hit_normal.mp3', 'lightningChain': 'hit_lightning.mp3',
                 'fireNova': 'hit_fire.mp3', 'iceShard': 'hit_ice.mp3', 'ricochetBolt': 'hit_normal.mp3',
                 'scatterShot': 'hit_normal.mp3', 'blackHole': 'hit_dark.mp3',
+                'poisonTouch': 'hit_normal.mp3', 'holyRay': 'hit_lightning.mp3', 'bouncingOrb': 'hit_lightning.mp3',
+                'shadowClone': 'hit_dark.mp3', 'meteor': 'hit_fire.mp3'
             };
             const defaultAudio = new Audio(); defaultAudio.volume = this.sfxVolume; defaultAudio.src = 'hit.mp3';
             defaultAudio.addEventListener('canplaythrough', () => { this.hitAudios['default'] = defaultAudio; this.hasHit['default'] = true; }, { once: true }); defaultAudio.load(); this.hitAudios['default'] = defaultAudio;
@@ -155,7 +122,7 @@
     function initAudio() { if (!audioCtx) { try { audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){} } if (audioCtx?.state === 'suspended') audioCtx.resume(); }
     function playSynthSound(freq, type, dur, vol = 0.07) { if (!audioCtx) return; try { const t = audioCtx.currentTime; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, t); gain.gain.setValueAtTime(vol, t); gain.gain.exponentialRampToValueAtTime(0.0001, t + dur); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(t); osc.stop(t + dur); } catch(e) {} }
     function sfxPickup() { if (!audioManager.playPickup()) playSynthSound(800, 'sine', 0.08, 0.04); }
-    function sfxHit(weaponType) { if (!audioManager.playHit(weaponType)) { switch (weaponType) { case 'fireNova': playSynthSound(80, 'sawtooth', 0.12, 0.05); break; case 'iceShard': playSynthSound(200, 'triangle', 0.08, 0.04); break; case 'lightningChain': playSynthSound(40, 'square', 0.1, 0.03); break; case 'blackHole': playSynthSound(30, 'sawtooth', 0.15, 0.06); break; default: playSynthSound(60, 'triangle', 0.1, 0.03); } } }
+    function sfxHit(weaponType) { if (!audioManager.playHit(weaponType)) { switch (weaponType) { case 'fireNova': case 'meteor': playSynthSound(80, 'sawtooth', 0.12, 0.05); break; case 'iceShard': playSynthSound(200, 'triangle', 0.08, 0.04); break; case 'lightningChain': case 'bouncingOrb': case 'holyRay': playSynthSound(40, 'square', 0.1, 0.03); break; case 'blackHole': case 'shadowClone': playSynthSound(30, 'sawtooth', 0.15, 0.06); break; default: playSynthSound(60, 'triangle', 0.1, 0.03); } } }
     function sfxExplosion() { playSynthSound(25, 'sawtooth', 0.3, 0.06); }
     function sfxLevelUp() { playSynthSound(500, 'sine', 0.12, 0.03); setTimeout(() => playSynthSound(700, 'sine', 0.12, 0.03), 70); }
     function sfxBossAppear() { playSynthSound(22, 'sawtooth', 0.55, 0.1); }
@@ -164,16 +131,22 @@
     const STATE = { MENU:'menu', PLAYING:'playing', LEVELUP:'levelUp', WAVE_TRANS:'waveTrans', GAMEOVER:'gameOver', VICTORY:'victory', PAUSED:'paused' };
     let gameState = STATE.MENU;
     let gameTime = 0, deltaTime = 0, lastTime = 0;
+    let effectiveGameTime = 0; // 用于极限五分钟计时（不含暂停/升级）
+    const RUSH_TIME_LIMIT = 300; // 5分钟
     let waveNumber = 0, waveTimer = 0, waveDuration = 28;
     let totalKills = 0, shakeAmount = 0;
     let stageIndex = 0, stageTransitionTimer = 0;
-    const TOTAL_STAGES = 5;
+    const TOTAL_STAGES = 8;
     const STAGES = [
         { name:'暗影墓地', bg1:'#0d0d1a', bg2:'#1a0d2e', weights:{skeleton:1,bat:0.2,zombie:0}, boss:'necromancer' },
         { name:'诅咒森林', bg1:'#0a1a0d', bg2:'#0d2e1a', weights:{skeleton:0.6,bat:1,zombie:0.4}, boss:'treant' },
         { name:'烈焰地牢', bg1:'#1a0d0a', bg2:'#2e1a0d', weights:{skeleton:0.4,bat:0.6,zombie:1}, boss:'fireGolem' },
         { name:'冰封深渊', bg1:'#0a0d1a', bg2:'#0d1a2e', weights:{skeleton:0.8,bat:0.8,zombie:0.8}, boss:'iceDragon' },
         { name:'混沌王座', bg1:'#120a18', bg2:'#1a0a1a', weights:{skeleton:1.2,bat:1,zombie:1.2}, boss:'chaosLord' },
+        // 新增场景
+        { name:'剧毒沼泽', bg1:'#0a1a0a', bg2:'#0d2e0d', weights:{skeleton:0.8,bat:1.2,zombie:0.8}, boss:'swampBeast' },
+        { name:'雷鸣山峰', bg1:'#1a1a0d', bg2:'#2e2e0a', weights:{skeleton:1,bat:1,zombie:1}, boss:'stormDragon' },
+        { name:'虚空裂隙', bg1:'#0d0d1a', bg2:'#1a0d2e', weights:{skeleton:1.4,bat:1.4,zombie:1.4}, boss:'voidLord' }
     ];
 
     let gameMode = 'normal';
@@ -221,6 +194,12 @@
             ricochetBolt:{ name:'弹射飞弹', type:'ricochetBolt', damage:20, cooldown:0.8, timer:0, speed:380, count:1, pierce:0, ricochet:3, range:400, color:'#ffaa40', glow:'#ff8830', size:5, level:1 },
             scatterShot:{ name:'散射弹幕', type:'scatterShot', damage:11, cooldown:0.5, timer:0, speed:350, count:5, spread:1.2, color:'#ff80ff', glow:'#ff50d0', size:3.5, level:1 },
             blackHole:{ name:'黑洞', type:'blackHole', damage:30, cooldown:2.5, timer:0, pullRadius:160, damageRadius:120, duration:1.8, color:'#202020', glow:'#8040ff', size:8, level:1 },
+            // 新增5种武器
+            poisonTouch:{ name:'剧毒之触', type:'poisonTouch', damage:8, cooldown:0.3, timer:0, speed:0, poisonDps:4, poisonDuration:3, range:220, color:'#88ff44', glow:'#44bb22', size:3, level:1, desc:'持续毒伤' },
+            holyRay:{ name:'圣光射线', type:'holyRay', damage:22, cooldown:1.2, timer:0, speed:0, rayLength:280, color:'#ffff88', glow:'#ffdd44', size:5, level:1, desc:'穿透光束' },
+            bouncingOrb:{ name:'弹射电球', type:'bouncingOrb', damage:18, cooldown:0.9, timer:0, speed:350, count:1, bounce:4, range:380, color:'#88ccff', glow:'#4488ff', size:5, level:1, desc:'多次弹跳' },
+            shadowClone:{ name:'暗影分身', type:'shadowClone', damage:12, cooldown:3.0, timer:0, duration:2.5, cloneCount:2, color:'#aa88ff', glow:'#7744cc', size:6, level:1, desc:'召唤分身' },
+            meteor:{ name:'陨石术', type:'meteor', damage:45, cooldown:2.8, timer:0, speed:0, radius:110, color:'#ff8844', glow:'#ff4422', size:12, level:1, desc:'范围轰击' }
         };
         const w = JSON.parse(JSON.stringify(base[type]));
         w.timer = w.cooldown*0.5;
@@ -228,7 +207,7 @@
         return w;
     }
     function upgradeWeapon(w) {
-        w.level++; w.damage = Math.floor(w.damage*1.24); w.cooldown = Math.max(0.04, w.cooldown*0.88);
+        w.level++; w.damage = Math.floor(w.damage*1.24); w.cooldown = Math.max(0.03, w.cooldown*0.88);
         if(w.type==='magicBolt' && w.level%3===0) w.count++;
         if(w.type==='spinningShield' && w.level%2===0) w.count++;
         if(w.type==='lightningChain' && w.level%2===0) w.count++;
@@ -237,10 +216,15 @@
         if(w.type==='ricochetBolt') { w.ricochet = Math.min(6, w.ricochet+1); if(w.level%2===0) w.count++; }
         if(w.type==='scatterShot') { w.count = Math.min(12, w.count+2); w.spread = Math.min(2.0, w.spread*1.05); }
         if(w.type==='blackHole') { w.pullRadius += 15; w.damageRadius += 15; w.damage = Math.floor(w.damage*1.25); }
+        if(w.type==='poisonTouch') { w.poisonDps += 2; w.poisonDuration += 0.5; }
+        if(w.type==='holyRay') { w.rayLength += 20; w.damage = Math.floor(w.damage*1.25); }
+        if(w.type==='bouncingOrb') { w.bounce = Math.min(8, w.bounce+1); if(w.level%2===0) w.count++; }
+        if(w.type==='shadowClone') { w.cloneCount = Math.min(5, w.cloneCount+1); w.duration += 0.3; }
+        if(w.type==='meteor') { w.radius += 10; w.damage = Math.floor(w.damage*1.3); }
     }
 
     let projectiles=[], particles=[], damageNumbers=[], lightningArcs=[];
-    let enemies=[], expOrbs=[], blackHoles=[];
+    let enemies=[], expOrbs=[], blackHoles=[], poisonClouds=[], clones=[];
     function spawnProjectile(x,y,vx,vy,w,extra={}) { projectiles.push({x,y,vx,vy,damage:w.damage,weapon:w,life:2.8,maxLife:2.8,pierceRemaining:w.pierce||0,hitEnemies:new Set(),...extra}); }
     function spawnParticle(x,y,vx,vy,color,life,size=3){ particles.push({x,y,vx,vy,color,life,maxLife:life,size}); }
     function spawnDamageNumber(x,y,value,color='#fff'){ damageNumbers.push({x:x+(Math.random()-0.5)*24,y:y-14,value:Math.round(value),color,life:0.8,maxLife:0.8,vy:-65-Math.random()*35}); }
@@ -249,19 +233,27 @@
     function spawnEnemy(type,x,y,ohp=0,ospd=0,odmg=0){
         const base={ skeleton:{hp:38,speed:90,damage:11,exp:7,radius:15,color:'#c8c8c8',glow:'#999'}, bat:{hp:20,speed:185,damage:8,exp:5,radius:12,color:'#dda0a0',glow:'#c55'}, zombie:{hp:70,speed:58,damage:24,exp:12,radius:18,color:'#8a9a6a',glow:'#5a6a3a'} };
         const s=base[type]||base.skeleton;
-        let waveScale, speedScale, damageScale;
-        if (gameMode === 'hard') { waveScale = 1 + (waveNumber - 1) * 0.28; speedScale = 1 + (waveNumber - 1) * 0.06; damageScale = 1 + (waveNumber - 1) * 0.22; }
-        else { waveScale = 1 + (waveNumber - 1) * 0.13; speedScale = 1 + (waveNumber - 1) * 0.035; damageScale = 1 + (waveNumber - 1) * 0.13; }
+        let waveScale=1+(waveNumber-1)*0.13, speedScale=1+(waveNumber-1)*0.035, damageScale=1+(waveNumber-1)*0.13;
+        if(gameMode==='hard') { waveScale=1+(waveNumber-1)*0.28; speedScale=1+(waveNumber-1)*0.06; damageScale=1+(waveNumber-1)*0.22; }
+        else if(gameMode==='rush') { waveScale=1+(waveNumber-1)*0.35; speedScale=1+(waveNumber-1)*0.08; damageScale=1+(waveNumber-1)*0.3; }
+        // 经典/恶搞模式后期难度提升
+        if((gameMode==='normal'||gameMode==='meme') && waveNumber>20) {
+            const extra = 1 + (waveNumber-20)*0.08;
+            waveScale *= extra; speedScale *= extra; damageScale *= extra;
+        }
         const stageScale = 1 + stageIndex * 0.28;
-        const e={ type,x,y, hp:ohp||Math.floor(s.hp*waveScale*stageScale), maxHp:ohp||Math.floor(s.hp*waveScale*stageScale), speed:ospd||(s.speed*speedScale), damage:odmg||Math.floor(s.damage*damageScale), exp:Math.floor(s.exp*(1+waveNumber*0.09)), radius:s.radius, color:s.color, glowColor:s.glow, slowTimer:0,slowAmount:0,hitFlashTimer:0,_shieldHitCd:0, assignedImg:null };
+        const e={ type,x,y, hp:ohp||Math.floor(s.hp*waveScale*stageScale), maxHp:ohp||Math.floor(s.hp*waveScale*stageScale), speed:ospd||(s.speed*speedScale), damage:odmg||Math.floor(s.damage*damageScale), exp:Math.floor(s.exp*(1+waveNumber*0.09)), radius:s.radius, color:s.color, glowColor:s.glow, slowTimer:0,slowAmount:0,poisonTimer:0,poisonDps:0,hitFlashTimer:0,_shieldHitCd:0, assignedImg:null };
         if(gameMode==='meme' && memeEnemyImgs.length>0) e.assignedImg = memeEnemyImgs[Math.floor(Math.random()*memeEnemyImgs.length)];
         enemies.push(e); return e;
     }
     function spawnBoss(type){
-        const defs={ necromancer:{hp:700,spd:54,dmg:38,exp:240,radius:34,color:'#2a2a3a',glow:'#7a3aff',name:'亡灵巫师'}, treant:{hp:850,spd:42,dmg:45,exp:300,radius:38,color:'#3a4a2a',glow:'#5a8a30',name:'腐化树精'}, fireGolem:{hp:1000,spd:48,dmg:54,exp:380,radius:36,color:'#4a2a1a',glow:'#ff5020',name:'烈焰魔像'}, iceDragon:{hp:1200,spd:60,dmg:50,exp:460,radius:40,color:'#2a3a4a',glow:'#60c0ff',name:'冰霜巨龙'}, chaosLord:{hp:1700,spd:52,dmg:66,exp:680,radius:44,color:'#3a1a3a',glow:'#ff30ff',name:'混沌之王'} };
+        const defs={ necromancer:{hp:700,spd:54,dmg:38,exp:240,radius:34,color:'#2a2a3a',glow:'#7a3aff',name:'亡灵巫师'}, treant:{hp:850,spd:42,dmg:45,exp:300,radius:38,color:'#3a4a2a',glow:'#5a8a30',name:'腐化树精'}, fireGolem:{hp:1000,spd:48,dmg:54,exp:380,radius:36,color:'#4a2a1a',glow:'#ff5020',name:'烈焰魔像'}, iceDragon:{hp:1200,spd:60,dmg:50,exp:460,radius:40,color:'#2a3a4a',glow:'#60c0ff',name:'冰霜巨龙'}, chaosLord:{hp:1700,spd:52,dmg:66,exp:680,radius:44,color:'#3a1a3a',glow:'#ff30ff',name:'混沌之王'},
+            swampBeast:{hp:1400,spd:38,dmg:55,exp:550,radius:38,color:'#3a5a2a',glow:'#88ff44',name:'沼泽巨兽'},
+            stormDragon:{hp:1600,spd:65,dmg:60,exp:620,radius:42,color:'#4a4a2a',glow:'#ffdd44',name:'风暴巨龙'},
+            voidLord:{hp:2000,spd:50,dmg:75,exp:800,radius:46,color:'#2a1a3a',glow:'#aa44ff',name:'虚空领主'} };
         const d=defs[type]||defs.necromancer;
-        const hardMult = gameMode === 'hard' ? 1.5 : 1.0;
-        const b={ type:'boss',bossType:type,bossName:d.name, x:W/2+(Math.random()-0.5)*300, y:H/2+(Math.random()-0.5)*250, hp:Math.floor(d.hp*(1+stageIndex*0.35)*hardMult), maxHp:Math.floor(d.hp*(1+stageIndex*0.35)*hardMult), speed:d.spd*hardMult, damage:Math.floor(d.dmg*hardMult), exp:Math.floor(d.exp*(1+stageIndex*0.25)), radius:d.radius, color:d.color, glowColor:d.glow, slowTimer:0,slowAmount:0,hitFlashTimer:0, isBoss:true, phaseTimer:0,specialTimer:3.5, assignedImg:null };
+        const hardMult = (gameMode==='hard'||gameMode==='rush') ? 1.5 : 1.0;
+        const b={ type:'boss',bossType:type,bossName:d.name, x:W/2+(Math.random()-0.5)*300, y:H/2+(Math.random()-0.5)*250, hp:Math.floor(d.hp*(1+stageIndex*0.35)*hardMult), maxHp:Math.floor(d.hp*(1+stageIndex*0.35)*hardMult), speed:d.spd*hardMult, damage:Math.floor(d.dmg*hardMult), exp:Math.floor(d.exp*(1+stageIndex*0.25)), radius:d.radius, color:d.color, glowColor:d.glow, slowTimer:0,slowAmount:0,poisonTimer:0,poisonDps:0,hitFlashTimer:0, isBoss:true, phaseTimer:0,specialTimer:3.5, assignedImg:null };
         if(gameMode==='meme' && memeEnemyImgs.length>0) b.assignedImg = memeEnemyImgs[Math.floor(Math.random()*memeEnemyImgs.length)];
         enemies.push(b); sfxBossAppear(); return b;
     }
@@ -285,7 +277,7 @@
         add('pierceAll','穿透 +1','投射物穿透','🔱','rare',()=>player.weapons.forEach(w=>{if(w.pierce!==undefined)w.pierce+=1;}));
         for(const w of player.weapons) pool.push({id:'up_'+w.type,name:`升级 ${w.name} Lv${w.level}→${w.level+1}`,desc:`伤害+24% 冷却-12%`,icon:'🔺',rarity:'weapon',apply:()=>upgradeWeapon(w)});
         const owned=player.weapons.map(w=>w.type);
-        const allTypes=['magicBolt','spinningShield','lightningChain','fireNova','iceShard','ricochetBolt','scatterShot','blackHole'];
+        const allTypes=['magicBolt','spinningShield','lightningChain','fireNova','iceShard','ricochetBolt','scatterShot','blackHole','poisonTouch','holyRay','bouncingOrb','shadowClone','meteor'];
         const availNew=allTypes.filter(t=>!owned.includes(t));
         if(player.weapons.length<6 && availNew.length>0){
             const nt=availNew[Math.floor(Math.random()*availNew.length)];
@@ -314,6 +306,7 @@
         totalDamageDealt += finalDmg;
         spawnDamageNumber(enemy.x,enemy.y,finalDmg, finalDmg>dmg?'#ffaa00':'#ffdd88');
         if(weapon&&weapon.type==='iceShard'){ enemy.slowTimer=weapon.slowDuration; enemy.slowAmount=weapon.slowAmount; }
+        if(weapon&&weapon.type==='poisonTouch'){ enemy.poisonTimer=weapon.poisonDuration; enemy.poisonDps=weapon.poisonDps; }
         if(player.lifeSteal>0) player.hp=Math.min(player.maxHp, player.hp+Math.floor(finalDmg*player.lifeSteal));
         if(weapon) sfxHit(weapon.type);
         if(enemy.hp<=0) killEnemy(enemy,isExplosion);
@@ -344,39 +337,48 @@
         totalDamageReceived += dmg;
         spawnDamageNumber(player.x,player.y-20,dmg,'#ff4444');
         for(let i=0;i<10;i++){ const a=Math.random()*Math.PI*2; spawnParticle(player.x,player.y,Math.cos(a)*120,Math.sin(a)*120,'#ff6666',0.35,3); }
-        if(player.hp<=0){ player.hp=0; gameState=STATE.GAMEOVER; gameEndTime = Date.now(); audioManager.stopBGM(); sfxExplosion(); for(let i=0;i<120;i++){ const a=Math.random()*Math.PI*2; spawnParticle(player.x,player.y,Math.cos(a)*320,Math.sin(a)*320,'#ff8888',0.7,4); } }
+        if(player.hp<=0){ player.hp=0; gameState=STATE.GAMEOVER; gameEndTime=Date.now(); audioManager.stopBGM(); sfxExplosion(); for(let i=0;i<120;i++){ const a=Math.random()*Math.PI*2; spawnParticle(player.x,player.y,Math.cos(a)*320,Math.sin(a)*320,'#ff8888',0.7,4); } }
     }
 
     function startGame(mode){
         initAudio(); audioManager.playBGM();
-        gameMode=mode; resetPlayer(); enemies=[]; projectiles=[]; particles=[]; damageNumbers=[]; lightningArcs=[]; expOrbs=[]; blackHoles=[];
-        waveNumber=0; waveTimer=0; totalKills=0; gameTime=0; shakeAmount=0; stageIndex=0; stageTransitionTimer=0;
+        gameMode=mode; resetPlayer(); enemies=[]; projectiles=[]; particles=[]; damageNumbers=[]; lightningArcs=[]; expOrbs=[]; blackHoles=[]; poisonClouds=[]; clones=[];
+        waveNumber=0; waveTimer=0; totalKills=0; gameTime=0; effectiveGameTime=0; shakeAmount=0; stageIndex=0; stageTransitionTimer=0;
         totalDamageDealt=0; totalDamageReceived=0; gameStartTime=Date.now(); gameEndTime=0;
         gameState=STATE.WAVE_TRANS; waveTimer=1.8; advanceWave();
-        menuButtons.style.display='none'; photoAssignPanel.style.display='none';
+        menuButtons.style.display='none'; photoAssignPanel.style.display='none'; pauseExitBtn.style.display='none';
         joystickActive=false; joystickTouchId=null;
     }
     function resetGame(){
         audioManager.stopBGM();
-        gameState=STATE.MENU; menuButtons.style.display='flex'; photoAssignPanel.style.display='none';
-        enemies=[]; projectiles=[]; particles=[]; damageNumbers=[]; lightningArcs=[]; expOrbs=[]; blackHoles=[];
+        gameState=STATE.MENU; menuButtons.style.display='flex'; photoAssignPanel.style.display='none'; pauseExitBtn.style.display='none';
+        enemies=[]; projectiles=[]; particles=[]; damageNumbers=[]; lightningArcs=[]; expOrbs=[]; blackHoles=[]; poisonClouds=[]; clones=[];
         joystickActive=false; joystickTouchId=null;
         memePlayerImg=null; memeEnemyImgs=[]; pendingMemeImages=[]; selectedPlayerPhotoIndex=-1;
     }
+    function exitToMenu(){
+        audioManager.stopBGM();
+        gameState=STATE.MENU; menuButtons.style.display='flex'; photoAssignPanel.style.display='none'; pauseExitBtn.style.display='none';
+        enemies=[]; projectiles=[]; particles=[]; damageNumbers=[]; lightningArcs=[]; expOrbs=[]; blackHoles=[]; poisonClouds=[]; clones=[];
+        joystickActive=false; joystickTouchId=null;
+    }
     function advanceWave(){
         waveNumber++; waveTimer=0;
-        waveDuration = gameMode === 'hard' ? Math.max(15, 28 - waveNumber * 1.2) : 26 + waveNumber * 2;
+        if(gameMode==='rush') waveDuration = Math.max(10, 22 - waveNumber*1.5);
+        else if(gameMode==='hard') waveDuration = Math.max(15, 28 - waveNumber*1.2);
+        else waveDuration = 26 + waveNumber*2;
         if(waveNumber>1 && waveNumber%6===0 && stageIndex<TOTAL_STAGES-1){ stageIndex++; stageTransitionTimer=2.8; enemies=[]; projectiles=[]; lightningArcs=[]; expOrbs=[]; blackHoles=[]; }
         const isBossWave=(waveNumber%5===0) && stageTransitionTimer<=0;
         if(isBossWave){ const bt=STAGES[Math.min(stageIndex,STAGES.length-1)].boss; spawnBoss(bt); }
-        for(let i=0;i<Math.min(10+waveNumber*2,35);i++) spawnEnemyAtEdge();
+        const spawnCount = gameMode==='rush' ? Math.min(20+waveNumber*3,45) : Math.min(10+waveNumber*2,35);
+        for(let i=0;i<spawnCount;i++) spawnEnemyAtEdge();
         gameState=STATE.PLAYING;
     }
     function updateWaveTransition(dt){ if(gameState!==STATE.WAVE_TRANS)return; waveTimer-=dt; if(waveTimer<=0) advanceWave(); }
     function checkWaveProgress(){
         if(gameState!==STATE.PLAYING)return;
         waveTimer+=deltaTime;
-        const spawnInterval = gameMode === 'hard' ? Math.max(0.15, 1.5 - waveNumber * 0.12) : Math.max(0.25, 2.2 - waveNumber * 0.08);
+        const spawnInterval = gameMode==='rush' ? Math.max(0.1, 1.2-waveNumber*0.1) : (gameMode==='hard'? Math.max(0.15, 1.5-waveNumber*0.12) : Math.max(0.25, 2.2-waveNumber*0.08));
         if(waveTimer%spawnInterval<deltaTime && enemies.length<55+waveNumber*9) spawnEnemyAtEdge();
         const allDead=enemies.length===0 && waveTimer>3;
         if(waveTimer>=waveDuration || allDead){
@@ -384,9 +386,8 @@
             player.hp=Math.min(player.maxHp, player.hp+Math.floor(player.maxHp*0.12));
         }
         if(stageTransitionTimer>0) stageTransitionTimer-=deltaTime;
-        if(stageIndex>=TOTAL_STAGES-1 && waveNumber>=25 && enemies.length===0 && gameState===STATE.WAVE_TRANS) {
-            gameState=STATE.VICTORY; gameEndTime = Date.now(); audioManager.stopBGM();
-        }
+        if(gameMode==='rush' && effectiveGameTime>=RUSH_TIME_LIMIT) { gameState=STATE.VICTORY; gameEndTime=Date.now(); audioManager.stopBGM(); }
+        else if(stageIndex>=TOTAL_STAGES-1 && waveNumber>=25 && enemies.length===0 && gameState===STATE.WAVE_TRANS) { gameState=STATE.VICTORY; gameEndTime=Date.now(); audioManager.stopBGM(); }
     }
 
     function update(dt){
@@ -399,6 +400,7 @@
             return;
         }
         deltaTime=Math.min(dt,0.1); gameTime+=deltaTime;
+        if(gameState===STATE.PLAYING) effectiveGameTime+=deltaTime;
         if(player.invincibleTimer>0) player.invincibleTimer-=deltaTime;
         if(shakeAmount>0) shakeAmount*=0.85; if(shakeAmount<0.1) shakeAmount=0;
 
@@ -428,6 +430,11 @@
             case'ricochetBolt': fireRicochetBolt(w); break;
             case'scatterShot': fireScatterShot(w); break;
             case'blackHole': spawnBlackHole(w); break;
+            case'poisonTouch': applyPoisonTouch(w); break;
+            case'holyRay': fireHolyRay(w); break;
+            case'bouncingOrb': fireBouncingOrb(w); break;
+            case'shadowClone': spawnShadowClone(w); break;
+            case'meteor': castMeteor(w); break;
         }
     }
     function nearestEnemy(x,y,range=Infinity,exclude=new Set()){ let best=null,bd=range; for(const e of enemies){ if(exclude.has(e))continue; const d=Math.hypot(e.x-x,e.y-y); if(d<bd){ bd=d; best=e; } } return best; }
@@ -438,10 +445,15 @@
     function fireRicochetBolt(w){ const t=nearestEnemy(player.x,player.y,w.range); for(let i=0;i<w.count;i++){ let a; if(t){ const dx=t.x-player.x,dy=t.y-player.y; a=Math.atan2(dy,dx)+(i-(w.count-1)/2)*0.3; } else a=Math.random()*Math.PI*2; const vx=Math.cos(a)*w.speed, vy=Math.sin(a)*w.speed; spawnProjectile(player.x,player.y,vx,vy,w,{ricochetLeft:w.ricochet}); } }
     function fireScatterShot(w){ const baseAngle=Math.random()*Math.PI*2; for(let i=0;i<w.count;i++){ const a=baseAngle+(i-(w.count-1)/2)*w.spread; const vx=Math.cos(a)*w.speed, vy=Math.sin(a)*w.speed; spawnProjectile(player.x,player.y,vx,vy,w); } }
     function spawnBlackHole(w){ blackHoles.push({x:player.x,y:player.y,weapon:w,life:w.duration,maxLife:w.duration,pullRadius:w.pullRadius,damageRadius:w.damageRadius,damageTimer:0,damageInterval:0.4}); }
+    function applyPoisonTouch(w){ const targets=enemies.filter(e=>Math.hypot(e.x-player.x,e.y-player.y)<w.range); for(const e of targets){ e.poisonTimer=w.poisonDuration; e.poisonDps=w.poisonDps; } }
+    function fireHolyRay(w){ let bestDist=w.rayLength; let bestEnemy=null; for(const e of enemies){ const d=Math.hypot(e.x-player.x,e.y-player.y); if(d<bestDist){ bestDist=d; bestEnemy=e; } } if(bestEnemy){ dealDamage(bestEnemy,w.damage,w); spawnLightningArc(player.x,player.y,bestEnemy.x,bestEnemy.y,w.glow,0.2); } }
+    function fireBouncingOrb(w){ const t=nearestEnemy(player.x,player.y,w.range); for(let i=0;i<w.count;i++){ let a; if(t){ const dx=t.x-player.x,dy=t.y-player.y; a=Math.atan2(dy,dx)+(i-0.5)*0.4; } else a=Math.random()*Math.PI*2; const vx=Math.cos(a)*w.speed, vy=Math.sin(a)*w.speed; spawnProjectile(player.x,player.y,vx,vy,w,{bounceLeft:w.bounce}); } }
+    function spawnShadowClone(w){ for(let i=0;i<w.cloneCount;i++){ const angle=Math.random()*Math.PI*2; const dist=40+Math.random()*40; const cx=player.x+Math.cos(angle)*dist, cy=player.y+Math.sin(angle)*dist; clones.push({x:cx,y:cy,weapon:w,life:w.duration,maxLife:w.duration,timer:0,interval:0.5}); } }
+    function castMeteor(w){ const target=nearestEnemy(player.x,player.y,400) || {x:player.x+(Math.random()-0.5)*200,y:player.y+(Math.random()-0.5)*200}; for(const e of enemies){ if(Math.hypot(e.x-target.x,e.y-target.y)<w.radius) dealDamage(e,w.damage,w); } for(let i=0;i<30;i++){ const a=Math.random()*Math.PI*2; spawnParticle(target.x,target.y,Math.cos(a)*80,Math.sin(a)*80,w.glow,0.4,6); } shakeAmount=Math.max(shakeAmount,6); }
 
-    function updateBlackHoles(dt){ for(let i=blackHoles.length-1;i>=0;i--){ const bh=blackHoles[i]; bh.life-=dt; if(bh.life<=0){ blackHoles.splice(i,1); continue; } for(const e of enemies){ const dx=bh.x-e.x,dy=bh.y-e.y,dist=Math.hypot(dx,dy); if(dist<bh.pullRadius && dist>5){ const strength=1-dist/bh.pullRadius; e.x+=dx/dist*strength*200*dt; e.y+=dy/dist*strength*200*dt; } } bh.damageTimer+=dt; while(bh.damageTimer>=bh.damageInterval){ bh.damageTimer-=bh.damageInterval; for(const e of enemies){ if(Math.hypot(e.x-bh.x,e.y-bh.y)<bh.damageRadius) dealDamage(e,bh.weapon.damage,bh.weapon); } } if(Math.random()<0.6) spawnParticle(bh.x+(Math.random()-0.5)*40,bh.y+(Math.random()-0.5)*40,0,0,bh.weapon.glow,0.3,4); } }
-    function updateProjectiles(dt){ for(let i=projectiles.length-1;i>=0;i--){ const p=projectiles[i]; p.x+=p.vx*dt; p.y+=p.vy*dt; p.life-=dt; if(p.x<-60||p.x>W+60||p.y<-60||p.y>H+60||p.life<=0){ spawnParticle(p.x,p.y,0,0,p.weapon.glow,0.25,4); projectiles.splice(i,1); continue; } let hit=false; for(const e of enemies){ if(p.hitEnemies.has(e))continue; if(Math.hypot(p.x-e.x,p.y-e.y)<e.radius+p.weapon.size+5){ dealDamage(e,p.damage,p.weapon); p.hitEnemies.add(e); if(p.ricochetLeft>0){ p.ricochetLeft--; const next=nearestEnemy(p.x,p.y,300,new Set(p.hitEnemies)); if(next){ const angle=Math.atan2(next.y-p.y,next.x-p.x); p.vx=Math.cos(angle)*p.weapon.speed*0.9; p.vy=Math.sin(angle)*p.weapon.speed*0.9; p.life=Math.min(p.life,1.5); }else{ hit=true; break; } }else if(p.pierceRemaining<=0){ hit=true; break; } else p.pierceRemaining--; } } if(hit){ spawnParticle(p.x,p.y,0,0,p.weapon.glow,0.3,5); projectiles.splice(i,1); } } }
-    function updateEnemies(dt){ for(const e of enemies){ if(e.slowTimer>0){ e.slowTimer-=dt; if(e.slowTimer<=0)e.slowAmount=0; } const spMult=e.slowTimer>0?(1-e.slowAmount):1; const dx=player.x-e.x,dy=player.y-e.y,dist=Math.hypot(dx,dy); if(dist>1){ e.x+=dx/dist*e.speed*spMult*dt; e.y+=dy/dist*e.speed*spMult*dt; } if(dist<player.radius+e.radius) damagePlayer(e.damage); if(e.hitFlashTimer>0)e.hitFlashTimer-=dt; if(e.isBoss){ e.phaseTimer+=dt; e.specialTimer-=dt; if(e.specialTimer<=0&&dist<320){ e.specialTimer=4+Math.random()*3; if(e.bossType==='necromancer'&&enemies.length<55){ for(let j=0;j<3;j++) spawnEnemy('skeleton',e.x+(Math.random()-0.5)*110,e.y+(Math.random()-0.5)*110); } } } if(e._shieldHitCd>0)e._shieldHitCd-=dt; } for(const w of player.weapons){ if(w.type!=='spinningShield')continue; for(let i=0;i<w.count;i++){ const ang=w.orbitAngle+(i/w.count)*Math.PI*2; const sx=player.x+Math.cos(ang)*w.orbitRadius, sy=player.y+Math.sin(ang)*w.orbitRadius; if(Math.random()<0.35) spawnParticle(sx,sy,0,0,w.glow,0.2,2.5); for(const e of enemies){ if(Math.hypot(sx-e.x,sy-e.y)<e.radius+w.size+4){ if(!e._shieldHitCd||e._shieldHitCd<=0){ e._shieldHitCd=0.38; dealDamage(e,w.damage,w); } } } } } }
+    function updateBlackHoles(dt){ for(let i=blackHoles.length-1;i>=0;i--){ const bh=blackHoles[i]; bh.life-=dt; if(bh.life<=0){ blackHoles.splice(i,1); continue; } for(const e of enemies){ const dx=bh.x-e.x,dy=bh.y-e.y,dist=Math.hypot(dx,dy); if(dist<bh.pullRadius && dist>5){ const strength=1-dist/bh.pullRadius; e.x+=dx/dist*strength*200*dt; e.y+=dy/dist*strength*200*dt; } } bh.damageTimer+=dt; while(bh.damageTimer>=bh.damageInterval){ bh.damageTimer-=bh.damageInterval; for(const e of enemies){ if(Math.hypot(e.x-bh.x,e.y-bh.y)<bh.damageRadius) dealDamage(e,bh.weapon.damage,bh.weapon); } } } }
+    function updateProjectiles(dt){ for(let i=projectiles.length-1;i>=0;i--){ const p=projectiles[i]; p.x+=p.vx*dt; p.y+=p.vy*dt; p.life-=dt; if(p.x<-60||p.x>W+60||p.y<-60||p.y>H+60||p.life<=0){ spawnParticle(p.x,p.y,0,0,p.weapon.glow,0.25,4); projectiles.splice(i,1); continue; } let hit=false; for(const e of enemies){ if(p.hitEnemies.has(e))continue; if(Math.hypot(p.x-e.x,p.y-e.y)<e.radius+p.weapon.size+5){ dealDamage(e,p.damage,p.weapon); p.hitEnemies.add(e); if(p.bounceLeft>0){ p.bounceLeft--; const next=nearestEnemy(p.x,p.y,300,new Set(p.hitEnemies)); if(next){ const angle=Math.atan2(next.y-p.y,next.x-p.x); p.vx=Math.cos(angle)*p.weapon.speed*0.9; p.vy=Math.sin(angle)*p.weapon.speed*0.9; p.life=Math.min(p.life,1.5); }else{ hit=true; break; } }else if(p.pierceRemaining<=0){ hit=true; break; } else p.pierceRemaining--; } } if(hit){ spawnParticle(p.x,p.y,0,0,p.weapon.glow,0.3,5); projectiles.splice(i,1); } } }
+    function updateEnemies(dt){ for(const e of enemies){ if(e.slowTimer>0){ e.slowTimer-=dt; if(e.slowTimer<=0)e.slowAmount=0; } if(e.poisonTimer>0){ e.poisonTimer-=dt; dealDamage(e,e.poisonDps*dt,null,true); if(e.hp<=0) continue; } const spMult=e.slowTimer>0?(1-e.slowAmount):1; const dx=player.x-e.x,dy=player.y-e.y,dist=Math.hypot(dx,dy); if(dist>1){ e.x+=dx/dist*e.speed*spMult*dt; e.y+=dy/dist*e.speed*spMult*dt; } if(dist<player.radius+e.radius) damagePlayer(e.damage); if(e.hitFlashTimer>0)e.hitFlashTimer-=dt; if(e.isBoss){ e.phaseTimer+=dt; e.specialTimer-=dt; if(e.specialTimer<=0&&dist<320){ e.specialTimer=4+Math.random()*3; } } if(e._shieldHitCd>0)e._shieldHitCd-=dt; } for(const w of player.weapons){ if(w.type!=='spinningShield')continue; for(let i=0;i<w.count;i++){ const ang=w.orbitAngle+(i/w.count)*Math.PI*2; const sx=player.x+Math.cos(ang)*w.orbitRadius, sy=player.y+Math.sin(ang)*w.orbitRadius; for(const e of enemies){ if(Math.hypot(sx-e.x,sy-e.y)<e.radius+w.size+4){ if(!e._shieldHitCd||e._shieldHitCd<=0){ e._shieldHitCd=0.38; dealDamage(e,w.damage,w); } } } } } for(const c of clones){ c.timer+=dt; if(c.timer>=c.interval){ c.timer-=c.interval; const nearest=nearestEnemy(c.x,c.y,300); if(nearest) dealDamage(nearest,c.weapon.damage,c.weapon); } c.life-=dt; } clones=clones.filter(c=>c.life>0); }
     function updateExpOrbs(dt){ for(let i=expOrbs.length-1;i>=0;i--){ const o=expOrbs[i]; o.life-=dt; o.pulse+=dt*5; if(o.life<=0){ expOrbs.splice(i,1); continue; } const dx=player.x-o.x,dy=player.y-o.y,dist=Math.hypot(dx,dy); if(dist<player.expPickupRange){ const sp=280+(1-dist/player.expPickupRange)*500; const mv=Math.min(sp*dt,dist); if(dist>0.5){ o.x+=dx/dist*mv; o.y+=dy/dist*mv; } if(dist<22){ player.exp+=o.value; expOrbs.splice(i,1); sfxPickup(); spawnParticle(o.x,o.y,0,0,'#ffe8a0',0.35,4); } } } }
     function updateParticles(dt){ for(let i=particles.length-1;i>=0;i--){ const p=particles[i]; p.x+=p.vx*dt; p.y+=p.vy*dt; p.life-=dt; if(p.life<=0)particles.splice(i,1); } }
     function updateDamageNumbers(dt){ for(let i=damageNumbers.length-1;i>=0;i--){ const d=damageNumbers[i]; d.y+=d.vy*dt; d.life-=dt; if(d.life<=0)damageNumbers.splice(i,1); } }
@@ -463,9 +475,12 @@
         const coords = canvasCoords(touch.clientX, touch.clientY);
         touchStartCoords = { x:coords.x, y:coords.y };
         if (gameState === STATE.GAMEOVER || gameState === STATE.VICTORY) { resetGame(); return; }
+        if (gameState === STATE.PAUSED) {
+            if (coords.y > H*0.7 && coords.x > W*0.3 && coords.x < W*0.7) { exitToMenu(); return; }
+        }
         if ((gameState === STATE.PLAYING || gameState === STATE.WAVE_TRANS || gameState === STATE.PAUSED) && isInPauseButton(coords.x, coords.y)) {
-            if (gameState === STATE.PAUSED) { gameState = prevPauseState || STATE.PLAYING; audioManager.resumeBGM(); }
-            else { prevPauseState = gameState; gameState = STATE.PAUSED; audioManager.pauseBGM(); }
+            if (gameState === STATE.PAUSED) { gameState = prevPauseState || STATE.PLAYING; audioManager.resumeBGM(); pauseExitBtn.style.display='none'; }
+            else { prevPauseState = gameState; gameState = STATE.PAUSED; audioManager.pauseBGM(); pauseExitBtn.style.display='block'; }
             return;
         }
         if (gameState === STATE.LEVELUP) return;
@@ -481,11 +496,7 @@
         e.preventDefault();
         if (joystickActive && joystickTouchId !== null) {
             for (const touch of e.touches) {
-                if (touch.identifier === joystickTouchId) {
-                    const coords = canvasCoords(touch.clientX, touch.clientY);
-                    updateJoystickFromTouch(coords.x, coords.y);
-                    break;
-                }
+                if (touch.identifier === joystickTouchId) { const coords = canvasCoords(touch.clientX, touch.clientY); updateJoystickFromTouch(coords.x, coords.y); break; }
             }
         }
     }, { passive: false });
@@ -495,8 +506,7 @@
         if (gameState === STATE.LEVELUP && touchStartCoords) {
             const touch = e.changedTouches[0];
             const coords = canvasCoords(touch.clientX, touch.clientY);
-            const dist = Math.hypot(coords.x - touchStartCoords.x, coords.y - touchStartCoords.y);
-            if (dist < 25) handleLevelUpClick(touchStartCoords.x, touchStartCoords.y);
+            if (Math.hypot(coords.x - touchStartCoords.x, coords.y - touchStartCoords.y) < 25) handleLevelUpClick(touchStartCoords.x, touchStartCoords.y);
             touchStartCoords = null; return;
         }
         for (const touch of e.changedTouches) { if (touch.identifier === joystickTouchId) { resetJoystick(); break; } }
@@ -506,14 +516,16 @@
 
     canvas.addEventListener('touchcancel', () => { resetJoystick(); touchStartCoords = null; });
 
+    pauseExitBtn.addEventListener('click', () => { exitToMenu(); });
+
     let mouseStartCoords = null;
     canvas.addEventListener('mousedown', (e) => {
         initAudio(); const coords = canvasCoords(e.clientX, e.clientY); mouseStartCoords = { x:coords.x, y:coords.y };
         if (gameState === STATE.MENU) return;
         if (gameState === STATE.GAMEOVER || gameState === STATE.VICTORY) { resetGame(); return; }
         if ((gameState === STATE.PLAYING || gameState === STATE.WAVE_TRANS || gameState === STATE.PAUSED) && isInPauseButton(coords.x, coords.y)) {
-            if (gameState === STATE.PAUSED) { gameState = prevPauseState || STATE.PLAYING; audioManager.resumeBGM(); }
-            else { prevPauseState = gameState; gameState = STATE.PAUSED; audioManager.pauseBGM(); }
+            if (gameState === STATE.PAUSED) { gameState = prevPauseState || STATE.PLAYING; audioManager.resumeBGM(); pauseExitBtn.style.display='none'; }
+            else { prevPauseState = gameState; gameState = STATE.PAUSED; audioManager.pauseBGM(); pauseExitBtn.style.display='block'; }
             return;
         }
         if (gameState === STATE.LEVELUP) return;
@@ -524,11 +536,7 @@
     });
     canvas.addEventListener('mousemove', (e) => { if (joystickActive) { const coords = canvasCoords(e.clientX, e.clientY); updateJoystickFromTouch(coords.x, coords.y); } });
     canvas.addEventListener('mouseup', (e) => {
-        if (gameState === STATE.LEVELUP && mouseStartCoords) {
-            const coords = canvasCoords(e.clientX, e.clientY);
-            if (Math.hypot(coords.x - mouseStartCoords.x, coords.y - mouseStartCoords.y) < 10) handleLevelUpClick(mouseStartCoords.x, mouseStartCoords.y);
-            mouseStartCoords = null; return;
-        }
+        if (gameState === STATE.LEVELUP && mouseStartCoords) { const coords = canvasCoords(e.clientX, e.clientY); if (Math.hypot(coords.x - mouseStartCoords.x, coords.y - mouseStartCoords.y) < 10) handleLevelUpClick(mouseStartCoords.x, mouseStartCoords.y); mouseStartCoords = null; return; }
         resetJoystick(); mouseStartCoords = null;
     });
     canvas.addEventListener('mouseleave', () => { resetJoystick(); mouseStartCoords = null; });
@@ -538,8 +546,8 @@
     window.addEventListener('keydown', e => {
         keys[e.key.toLowerCase()] = true; initAudio();
         if (e.key === 'Escape' || e.key === 'p') {
-            if (gameState === STATE.PLAYING || gameState === STATE.WAVE_TRANS) { prevPauseState = gameState; gameState = STATE.PAUSED; audioManager.pauseBGM(); }
-            else if (gameState === STATE.PAUSED) { gameState = prevPauseState || STATE.PLAYING; audioManager.resumeBGM(); }
+            if (gameState === STATE.PLAYING || gameState === STATE.WAVE_TRANS) { prevPauseState = gameState; gameState = STATE.PAUSED; audioManager.pauseBGM(); pauseExitBtn.style.display='block'; }
+            else if (gameState === STATE.PAUSED) { gameState = prevPauseState || STATE.PLAYING; audioManager.resumeBGM(); pauseExitBtn.style.display='none'; }
             return;
         }
         if (gameState === STATE.MENU && (e.key===' '||e.key==='Enter')) startGame('normal');
@@ -551,6 +559,7 @@
     btnNormal.addEventListener('click',()=>{ initAudio(); startGame('normal'); });
     btnMeme.addEventListener('click',()=>{ initAudio(); photoInput.value=''; photoInput.click(); });
     btnHard.addEventListener('click',()=>{ initAudio(); startGame('hard'); });
+    btnRush.addEventListener('click',()=>{ initAudio(); startGame('rush'); });
     photoInput.addEventListener('change',e=>{ const files=Array.from(e.target.files); if(files.length===0)return; processMemeImages(files); });
     btnConfirmAssign.addEventListener('click',confirmPhotoAssignment);
     btnCancelAssign.addEventListener('click',cancelPhotoAssignment);
@@ -593,7 +602,6 @@
         for(const p of particles){ const a=p.life/p.maxLife; ctx.globalAlpha=a; ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill(); } ctx.globalAlpha=1;
         for(const d of damageNumbers){ ctx.globalAlpha=d.life/d.maxLife; ctx.fillStyle=d.color; ctx.font='bold 15px sans-serif'; ctx.textAlign='center'; ctx.fillText(d.value,d.x,d.y); } ctx.globalAlpha=1;
         ctx.restore();
-
         if (joystickActive && (gameState === STATE.PLAYING || gameState === STATE.WAVE_TRANS)) {
             ctx.save();
             ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2;
@@ -602,7 +610,6 @@
             ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 2.5; ctx.stroke();
             ctx.restore();
         }
-
         renderUI();
     }
 
@@ -613,7 +620,8 @@
         ctx.fillText(`⭐ Lv${player.level}`,12,38);
         ctx.textAlign='right';
         ctx.fillText(`${STAGES[Math.min(stageIndex,STAGES.length-1)].name} | 波${waveNumber}`,W-12,20);
-        ctx.fillText(`击杀: ${totalKills}`,W-12,38);
+        if(gameMode==='rush') ctx.fillText(`⏱ ${Math.max(0,Math.ceil(RUSH_TIME_LIMIT-effectiveGameTime))}秒`,W-12,38);
+        else ctx.fillText(`击杀: ${totalKills}`,W-12,38);
         for(let i=0;i<player.weapons.length;i++){ const w=player.weapons[i]; ctx.fillStyle=w.glow; ctx.font='9px sans-serif'; ctx.fillText(`${w.name} Lv${w.level}`,W-12,H-15-i*16); }
 
         if(gameState===STATE.PLAYING||gameState===STATE.WAVE_TRANS||gameState===STATE.PAUSED){
@@ -626,7 +634,11 @@
             ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.font='bold 22px sans-serif'; ctx.textAlign='center';
             ctx.fillText(`⚔ 第 ${waveNumber+1} 波即将开始`,W/2,H/2-30);
         }
-        if(gameState===STATE.PAUSED){ ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.font='bold 36px sans-serif'; ctx.textAlign='center'; ctx.fillText('⏸ 已暂停',W/2,H/2-20); }
+        if(gameState===STATE.PAUSED){ 
+            ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(0,0,W,H);
+            ctx.fillStyle='#fff'; ctx.font='bold 36px sans-serif'; ctx.textAlign='center';
+            ctx.fillText('⏸ 已暂停',W/2,H/2-60);
+        }
         if(gameState===STATE.LEVELUP){
             ctx.fillStyle='rgba(0,0,0,0.72)'; ctx.fillRect(0,0,W,H);
             ctx.fillStyle='#ffd700'; ctx.font='bold 24px sans-serif'; ctx.textAlign='center'; ctx.fillText('选择升级',W/2,80);
@@ -654,12 +666,11 @@
             const titleGrad = ctx.createLinearGradient(W/2-150, H*0.15, W/2+150, H*0.15);
             titleGrad.addColorStop(0,'#ffd700'); titleGrad.addColorStop(0.5,'#ffaa40'); titleGrad.addColorStop(1,'#ffd700');
             ctx.fillStyle = titleGrad; ctx.font = 'bold 48px sans-serif'; ctx.textAlign = 'center';
-            ctx.fillText('🌙 暗夜幸存者', W/2, H*0.18);
+            ctx.fillText('邦巴崩', W/2, H*0.18);
             ctx.fillStyle = '#d4aaff'; ctx.font = 'bold 16px sans-serif';
-            ctx.fillText('SHADOW SURVIVOR', W/2, H*0.18+40);
+            ctx.fillText('BOMBABOMB, W/2, H*0.18+40);
             ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.font = '13px sans-serif';
             ctx.fillText('选择模式开始游戏', W/2, H*0.82);
-            ctx.fillText('音频文件：bgm.mp3 / hit*.mp3 / pickup.mp3', W/2, H*0.86);
         }
     }
 
@@ -692,9 +703,9 @@
 
     function gameLoop(ts){ if(!lastTime) lastTime=ts; let dt=(ts-lastTime)/1000; if(dt<=0)dt=0.016; if(dt>0.2)dt=0.2; lastTime=ts; update(dt); render(); requestAnimationFrame(gameLoop); }
     document.addEventListener('touchmove',e=>{ if(e.target.closest('#game-container')) e.preventDefault(); },{passive:false});
-    resetPlayer(); gameState=STATE.MENU; menuButtons.style.display='flex'; photoAssignPanel.style.display='none';
+    resetPlayer(); gameState=STATE.MENU; menuButtons.style.display='flex'; photoAssignPanel.style.display='none'; pauseExitBtn.style.display='none';
     requestAnimationFrame(gameLoop);
-    console.log('✅ 头像横排修复版已启动');
+    console.log('✅ Bombabomb已启动！');
 })();
 </script>
 </body>
