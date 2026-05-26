@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, touch-action: none">
-    <title>邦巴崩</title>
+    <title>暗夜幸存者 · 极限五分钟版</title>
     <style>
         :root { --bg: #050510; }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
@@ -666,9 +666,9 @@
             const titleGrad = ctx.createLinearGradient(W/2-150, H*0.15, W/2+150, H*0.15);
             titleGrad.addColorStop(0,'#ffd700'); titleGrad.addColorStop(0.5,'#ffaa40'); titleGrad.addColorStop(1,'#ffd700');
             ctx.fillStyle = titleGrad; ctx.font = 'bold 48px sans-serif'; ctx.textAlign = 'center';
-            ctx.fillText('邦巴崩', W/2, H*0.18);
+            ctx.fillText('🌙 暗夜幸存者', W/2, H*0.18);
             ctx.fillStyle = '#d4aaff'; ctx.font = 'bold 16px sans-serif';
-            ctx.fillText('BOMBABOMB', W/2, H*0.18+40);
+            ctx.fillText('SHADOW SURVIVOR', W/2, H*0.18+40);
             ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.font = '13px sans-serif';
             ctx.fillText('选择模式开始游戏', W/2, H*0.82);
         }
@@ -705,7 +705,7 @@
     document.addEventListener('touchmove',e=>{ if(e.target.closest('#game-container')) e.preventDefault(); },{passive:false});
     resetPlayer(); gameState=STATE.MENU; menuButtons.style.display='flex'; photoAssignPanel.style.display='none'; pauseExitBtn.style.display='none';
     requestAnimationFrame(gameLoop);
-    console.log('✅ 已启动！');
+    console.log('✅ 极限五分钟版已启动！');
 })();
 </script>
 </body>
